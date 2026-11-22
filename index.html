@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+/* 主題初始套用：先於畫面渲染，避免淺色閃爍（網址加 ?theme=dark 可強制指定一次） */
+(function(){try{var s=localStorage.getItem("pm_theme");var q=(location.search||"").match(/[?&]theme=(dark|light)/);if(q){s=q[1];}if(s!=="dark"&&s!=="light"){s=(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)?"dark":"light";}if(s==="dark"){document.documentElement.setAttribute("data-theme","dark");}}catch(e){}})();
+</script>
+
 <title>團隊專案排程 (GitHub 雲端版)</title>
 <style>
 :root {
@@ -17,6 +22,8 @@
   --today: #ef4444;
   --milestone: #f59e0b;
   --milestone-dark: #b45309;
+  --row-sub-bg: #fafcff;
+  --soft-bg: #f8fafc;
   --row-h: 44px;
   --left-w: 390px;
 }
@@ -602,9 +609,227 @@ th { background: #f8fafc; font-weight: 700; color: var(--muted); }
   font-size: 12.5px; color: #92400e; line-height: 1.55; margin-bottom: 14px;
 }
 .tour-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+/* ==================== 主題切換：淺色基準元件 ==================== */
+.quick-code-box { background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; }
+.theme-toggle-btn { white-space: nowrap; }
+
+/* ==================== 深色主題（html[data-theme="dark"]） ==================== */
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0d1320;
+  --card: #151d2b;
+  --border: #2b3749;
+  --text: #e6ecf6;
+  --muted: #93a2b8;
+  --primary: #3b82f6;
+  --primary-hover: #60a5fa;
+  --danger: #f87171;
+  --today: #fb7185;
+  --milestone: #fbbf24;
+  --milestone-dark: #fcd34d;
+  --row-sub-bg: #121a27;
+  --soft-bg: #131b28;
+}
+html[data-theme="dark"] body { background: var(--bg); color: var(--text); }
+html[data-theme="dark"] header { background: #111826; border-bottom-color: var(--border); }
+
+/* --- 表單元件 --- */
+html[data-theme="dark"] select,
+html[data-theme="dark"] input[type="text"],
+html[data-theme="dark"] input[type="password"],
+html[data-theme="dark"] input[type="date"],
+html[data-theme="dark"] input[type="datetime-local"],
+html[data-theme="dark"] input[type="number"],
+html[data-theme="dark"] input[type="search"],
+html[data-theme="dark"] textarea {
+  background: #0e1522; color: var(--text); border-color: var(--border);
+}
+html[data-theme="dark"] select option { background: #0e1522; color: var(--text); }
+html[data-theme="dark"] #projectSelect { background: #1a2434; border-color: var(--border); }
+
+/* --- 按鈕（先一般、後特定，避免蓋掉透明樣式） --- */
+html[data-theme="dark"] button { background: #1c2637; color: var(--text); border-color: var(--border); }
+html[data-theme="dark"] button:hover:not(:disabled) { background: #263244; }
+html[data-theme="dark"] button.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+html[data-theme="dark"] button.primary:hover:not(:disabled) { background: var(--primary-hover); }
+html[data-theme="dark"] button.danger { background: #2a1418; color: #fca5a5; border-color: #7f1d1d; }
+html[data-theme="dark"] button.danger:hover:not(:disabled) { background: #3a1a20; }
+html[data-theme="dark"] button.tour-btn { background: #3a2a0a; color: #fcd34d; border-color: #78500f; }
+html[data-theme="dark"] button.tour-btn:hover:not(:disabled) { background: #4a360c; }
+html[data-theme="dark"] .tabs { background: #18212f; }
+html[data-theme="dark"] .tab { background: transparent; color: var(--muted); }
+html[data-theme="dark"] .tab.active { background: #26344a; color: #93c5fd; box-shadow: none; }
+html[data-theme="dark"] .identity-btn { background: #1a2434; border-color: var(--border); }
+html[data-theme="dark"] .zoom-group { background: #18212f; }
+html[data-theme="dark"] .zoom-btn { background: transparent; color: var(--muted); }
+html[data-theme="dark"] .zoom-btn:hover { background: #26344a; }
+html[data-theme="dark"] .zoom-btn.active { background: #2f4059; color: #93c5fd; box-shadow: none; }
+html[data-theme="dark"] .sub-tab { background: transparent; color: var(--muted); }
+html[data-theme="dark"] .sub-tab.active { background: #1e2f4d; color: #93c5fd; }
+html[data-theme="dark"] .fs-crumb { background: transparent; color: #93c5fd; }
+html[data-theme="dark"] .fs-crumb:hover { background: #1e3358; }
+html[data-theme="dark"] .tour-dot { background: #1c2637; border-color: var(--border); color: #cbd5e1; }
+html[data-theme="dark"] .tour-dot.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+html[data-theme="dark"] .tree-toggle { background: #1c2637; border-color: var(--border); color: #cbd5e1; }
+html[data-theme="dark"] .tree-toggle:hover { background: #263244; }
+html[data-theme="dark"] .sub-add-btn { background: transparent; border-color: #38455c; color: var(--muted); }
+html[data-theme="dark"] .sub-add-btn:hover { background: #1e3358; color: #93c5fd; border-color: #2b4c7a; }
+html[data-theme="dark"] .link-icon-btn { background: #1c2637; border-color: var(--border); color: #cbd5e1; }
+html[data-theme="dark"] .link-icon-btn:hover { background: #263244; }
+html[data-theme="dark"] .filter-pill { background: #1c2637; border-color: var(--border); color: var(--muted); }
+html[data-theme="dark"] .filter-pill.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+/* --- 角色標籤與狀態徽章 --- */
+html[data-theme="dark"] .role-sysadmin { background: #2e1a5e; color: #c4b5fd; }
+html[data-theme="dark"] .role-pm { background: #0b3f37; color: #5eead4; }
+html[data-theme="dark"] .role-member { background: #16305c; color: #93c5fd; }
+html[data-theme="dark"] .role-viewer { background: #232d3d; color: #cbd5e1; }
+html[data-theme="dark"] .sync-badge { background: #0b3f2a; color: #6ee7b7; }
+html[data-theme="dark"] .sync-badge.err { background: #431a1a; color: #fca5a5; }
+html[data-theme="dark"] .readonly-banner { background: #3f2c08; color: #fcd34d; border-bottom-color: #78500f; }
+
+/* --- 連結／里程碑／共用檔案標籤 --- */
+html[data-theme="dark"] .ms-badge { background: #3f2c08; color: #fcd34d; border-color: #78500f; }
+html[data-theme="dark"] .link-chip { background: #15294a; color: #93c5fd; border-color: #1e3f6b; }
+html[data-theme="dark"] .link-chip:hover { background: #1b3559; }
+html[data-theme="dark"] .link-chip.path { background: #232d3d; color: #cbd5e1; border-color: #38455c; }
+html[data-theme="dark"] .link-chip.path:hover { background: #2b3749; }
+html[data-theme="dark"] .link-chip.share-dir { background: #0b3b36; color: #5eead4; border-color: #134e4a; }
+html[data-theme="dark"] .link-chip.share-dir:hover { background: #0f4a44; }
+html[data-theme="dark"] .link-chip.share-file { background: #1d2447; color: #a5b4fc; border-color: #3730a3; }
+html[data-theme="dark"] .link-chip.share-file:hover { background: #262f5c; }
+html[data-theme="dark"] .pm-pill-info { background: #0b3b36; color: #5eead4; border-color: #134e4a; }
+html[data-theme="dark"] .sub-count-badge { background: #2b3749; color: #cbd5e1; }
+
+/* --- 甘特圖 --- */
+html[data-theme="dark"] .gantt-toolbar { background: #121a27; border-bottom-color: var(--border); }
+html[data-theme="dark"] .gantt-left-head { background: #131c2a; border-bottom-color: var(--border); }
+html[data-theme="dark"] .gantt-row-label { border-bottom-color: #202a3a; }
+html[data-theme="dark"] .gantt-row-label:hover { background: #1a2434; }
+html[data-theme="dark"] .gantt-row-label.is-parent .gantt-row-title { color: var(--text); }
+html[data-theme="dark"] .gantt-row-label.is-subtask { background: #121a27; }
+html[data-theme="dark"] .gantt-header { background: #131c2a; border-bottom-color: var(--border); }
+html[data-theme="dark"] .gantt-months { border-bottom-color: var(--border); }
+html[data-theme="dark"] .gantt-day-cell { border-right-color: #202a3a; }
+html[data-theme="dark"] .gantt-day-cell.wknd { background: #18212f; }
+html[data-theme="dark"] .gantt-day-cell.today { background: #4a1d24; color: #fda4af; }
+html[data-theme="dark"] .gantt-grid-row { border-bottom-color: #202a3a; }
+html[data-theme="dark"] .gantt-bg-col { border-right-color: #1b2433; }
+html[data-theme="dark"] .gantt-bg-col.wknd,
+html[data-theme="dark"] .gantt-bg-col.offhour { background: #161f2d; }
+html[data-theme="dark"] .gantt-bg-col.day-sep { border-right-color: #38455c; }
+html[data-theme="dark"] .gantt-ms-label { background: rgba(58,44,12,.92); color: #fcd34d; border-color: #78500f; }
+html[data-theme="dark"] .gantt-actual-late { color: #fda4af; border-color: #f87171; }
+html[data-theme="dark"] .gantt-actual-overdue { color: #fda4af; border-color: #ef4444; }
+
+/* --- 看板 --- */
+html[data-theme="dark"] .kanban-col { background: #121a27; }
+html[data-theme="dark"] .kanban-col.drag-over { background: #16305c; }
+html[data-theme="dark"] .k-card { background: #1a2434; box-shadow: 0 1px 3px rgba(0,0,0,.5); }
+html[data-theme="dark"] .k-card.milestone { background: #3a2d0c; }
+html[data-theme="dark"] .prog-mini { background: #2b3749; }
+
+/* --- 清單／表格／紀錄 --- */
+html[data-theme="dark"] table { background: #151d2b; box-shadow: none; }
+html[data-theme="dark"] th { background: #1a2434; }
+html[data-theme="dark"] th, html[data-theme="dark"] td { border-bottom-color: var(--border); }
+html[data-theme="dark"] .log-item { background: #151d2b; border-color: var(--border); }
+html[data-theme="dark"] .log-proj { background: #232d3d; color: #cbd5e1; }
+
+/* --- 彈出視窗／表單 --- */
+html[data-theme="dark"] .modal { background: #151d2b; box-shadow: 0 20px 40px rgba(0,0,0,.55); }
+html[data-theme="dark"] .info-note { background: #1b2536; color: #b6c2d4; }
+html[data-theme="dark"] .check-box-row { background: #3f2c08; border-color: #78500f; color: #fcd34d; }
+html[data-theme="dark"] .member-card { background: #1a2434; border-color: var(--border); }
+html[data-theme="dark"] .member-card:hover { border-color: #3b82f6; background: #1e2a3d; }
+html[data-theme="dark"] .member-card.selected { border-color: var(--primary); background: #16305c; }
+html[data-theme="dark"] .pin-box { background: #131b28; border-color: var(--border); }
+html[data-theme="dark"] .perm-row { background: #131b28; border-color: var(--border); }
+html[data-theme="dark"] .pm-check-list { background: #131b28; border-color: var(--border); }
+html[data-theme="dark"] .pm-check-item { background: #1a2434; border-color: var(--border); }
+
+/* --- 共用資料夾瀏覽器 --- */
+html[data-theme="dark"] .fs-toolbar { background: #131b28; border-color: var(--border); }
+html[data-theme="dark"] .fs-crumb-bar { background: #1b2536; }
+html[data-theme="dark"] .fs-realpath-bar { background: #131b28; border-color: var(--border); }
+html[data-theme="dark"] .fs-list-wrap { background: #151d2b; border-color: var(--border); }
+html[data-theme="dark"] .fs-item { border-bottom-color: #202a3a; }
+html[data-theme="dark"] .fs-item:hover { background: #1a2434; }
+html[data-theme="dark"] .root-row { background: #131b28; border-color: var(--border); }
+html[data-theme="dark"] .root-status.ok { background: #0b3f2a; color: #6ee7b7; }
+html[data-theme="dark"] .root-status.bad { background: #431a1a; color: #fca5a5; }
+html[data-theme="dark"] .root-status[style] { background: #232d3d !important; color: #cbd5e1 !important; }
+
+/* --- 圖例條 --- */
+html[data-theme="dark"] .legend-bar { background: #121a27; border-bottom-color: var(--border); }
+
+/* --- 進度分析 --- */
+html[data-theme="dark"] .kpi-card { background: #151d2b; border-color: var(--border); box-shadow: none; }
+html[data-theme="dark"] .kpi-val { color: var(--text); }
+html[data-theme="dark"] .analysis-head h4 { color: var(--text); }
+html[data-theme="dark"] .var-bar-track { background: #2b3749; }
+
+/* --- 調色盤 --- */
+html[data-theme="dark"] .color-cfg-group { background: #131b28; border-color: var(--border); }
+html[data-theme="dark"] .color-cfg-title { color: var(--text); }
+html[data-theme="dark"] .color-cfg-item { background: #1a2434; border-color: var(--border); }
+
+/* --- 休假日 --- */
+html[data-theme="dark"] .gantt-holiday-tag { background: rgba(74,29,36,.94); color: #fda4af; border-color: #7f1d3a; }
+html[data-theme="dark"] .gantt-split-bridge-tag { background: rgba(74,29,36,.92); color: #fda4af; border-color: #7f1d3a; }
+html[data-theme="dark"] .holiday-badge { background: #3a1520; color: #fda4af; border-color: #7f1d3a; }
+html[data-theme="dark"] .holiday-alert-box { background: #3a1520; border-color: #7f1d3a; color: #fda4af; }
+html[data-theme="dark"] .holiday-row { background: #131b28; border-color: var(--border); }
+html[data-theme="dark"] .holiday-impact-row { background: #161f2e; border-color: #7f1d3a; }
+
+/* --- 觀看密碼鎖定畫面 --- */
+html[data-theme="dark"] .view-lock-card { background: #151d2b; }
+html[data-theme="dark"] .view-lock-card h2 { color: var(--text); }
+html[data-theme="dark"] .view-lock-icon { background: #17284a; color: #93c5fd; }
+html[data-theme="dark"] .view-lock-form input { background: #0e1522; color: var(--text); border-color: var(--border); }
+html[data-theme="dark"] .view-lock-foot { color: #8b9bb1; }
+
+/* --- 操作教學 --- */
+html[data-theme="dark"] .tour-card { background: #151d2b; border-color: var(--border); box-shadow: 0 22px 50px rgba(0,0,0,.6); }
+html[data-theme="dark"] .tour-title { color: var(--text); }
+html[data-theme="dark"] .tour-body { color: #c3cede; }
+html[data-theme="dark"] .tour-tip { background: #3f2c08; color: #fcd34d; }
+
+/* --- 內嵌淺色區塊（inline style 需 !important） --- */
+html[data-theme="dark"] #taskReadonlyHint { background: #3f2c08 !important; color: #fcd34d !important; }
+html[data-theme="dark"] #splitHolidayWrap { background: #3a1520 !important; border-color: #7f1d3a !important; color: #fda4af !important; }
+html[data-theme="dark"] #fVariancePreview { background: #131b28 !important; }
+html[data-theme="dark"] #ghStatusBox { background: #131b28 !important; border-color: var(--border) !important; }
+html[data-theme="dark"] #btnExtendForHolidays { background: #0b3b36 !important; color: #5eead4 !important; border-color: #134e4a !important; }
+html[data-theme="dark"] #btnPresetTW2027 { background: #3a1520 !important; color: #fda4af !important; border-color: #7f1d3a !important; }
+html[data-theme="dark"] #btnCopyCloudInvite { background: #0b3b36 !important; color: #5eead4 !important; border-color: #134e4a !important; }
+
+/* --- GitHub 連線畫面的快速連線碼區塊（雲端版） --- */
+html[data-theme="dark"] .quick-code-box { background: #0b3b36; border-color: #134e4a; }
+html[data-theme="dark"] .quick-code-box label { color: #5eead4 !important; }
+html[data-theme="dark"] #btnApplyQuickCode { background: #0f766e; color: #fff; border-color: #0f766e; }
+html[data-theme="dark"] #themeToggleBtn { background: #1c2637; color: #fcd34d; border-color: var(--border); }
+/* --- 捲軸與其他小晶片 --- */
+html[data-theme="dark"] { scrollbar-color: #3a4a63 #0f1623; }
+html[data-theme="dark"] ::-webkit-scrollbar { width: 11px; height: 11px; }
+html[data-theme="dark"] ::-webkit-scrollbar-track { background: #0f1623; }
+html[data-theme="dark"] ::-webkit-scrollbar-thumb { background: #34425a; border-radius: 6px; border: 2px solid #0f1623; }
+html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover { background: #44577a; }
+html[data-theme="dark"] ::-webkit-scrollbar-corner { background: #0f1623; }
+html[data-theme="dark"] #btnPickSharedFile { background: #0b3b36 !important; color: #5eead4 !important; border-color: #134e4a !important; }
+html[data-theme="dark"] input[type="range"] { accent-color: var(--primary); }
+html[data-theme="dark"] input[type="checkbox"], html[data-theme="dark"] input[type="radio"] { accent-color: var(--primary); }
+#themeFab {
+  position: fixed; right: 16px; bottom: 16px; z-index: 600;
+  width: 42px; height: 42px; border-radius: 50%; padding: 0; font-size: 18px; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 14px rgba(0,0,0,.28);
+}
+html[data-theme="dark"] #themeFab { background: #1c2637; color: #fcd34d; border-color: var(--border); box-shadow: 0 4px 14px rgba(0,0,0,.55); }
 </style>
 </head>
 <body>
+<button type="button" id="themeFab" title="切換深色／淺色主題">🌙</button>
 <!-- Step 0: GitHub Private Repo Connection Gate (Zero Secrets Stored in HTML) -->
 <div id="ghConnectOverlay" class="view-lock-overlay hidden" style="z-index:520;">
   <div class="view-lock-card" style="max-width:460px;text-align:left;">
@@ -616,7 +841,7 @@ th { background: #f8fafc; font-weight: 700; color: var(--muted); }
         請貼上管理員提供的<strong>快速連線碼</strong>，或手動填入私有倉庫與存取權杖（僅儲存在本機瀏覽器）。
       </p>
     </div>
-    <div style="background:#f0fdfa;border:1px solid #99f6e4;border-radius:10px;padding:10px 12px;margin-bottom:12px;">
+    <div class="quick-code-box">
       <label style="font-size:12px;font-weight:700;color:#0f766e;display:block;margin-bottom:5px;">⚡ 方式一：貼上團隊快速連線碼（PMGH:...）</label>
       <div style="display:flex;gap:6px;">
         <input type="password" id="ghQuickCodeInput" placeholder="貼上 PMGH:... 連線碼" style="flex:1;font-size:12.5px;" autocomplete="off">
@@ -705,6 +930,7 @@ th { background: #f8fafc; font-weight: 700; color: var(--muted); }
     <button id="btnHolidays" title="管理休假日（如農曆過年）與截斷任務設定">📅 休假日</button>
     <button id="btnOpenSharedFiles" style="display:none;" title="僅公司區網本地版支援">📂 共用檔案</button>
     <button id="btnExportCSV">匯出 CSV</button>
+    <button id="themeToggleBtn" class="theme-toggle-btn" title="目前為淺色主題，點擊切換深色">🌙 主題</button>
     <button id="btnSettings">設定</button>
     <button id="btnLockScreen" title="立即鎖定畫面（離開座位防窺探）" style="display:none;">🔒 鎖定</button>
     <button class="tour-btn" id="btnTour">❓ 操作教學</button>
@@ -864,7 +1090,7 @@ th { background: #f8fafc; font-weight: 700; color: var(--muted); }
       </div>
       <div class="form-row full">
         <label>任務專屬底色（「🎨 分色：依任務」時顯示，儲存後同步團隊）</label>
-        <div style="display:flex;align-items:center;gap:10px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:#f8fafc;">
+        <div style="display:flex;align-items:center;gap:10px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--soft-bg);">
           <input type="color" id="fColor" value="#2563eb" style="width:38px;height:26px;border:none;padding:0;background:transparent;cursor:pointer;">
           <span id="fColorBadge" class="color-pill" style="background:#2563eb;color:#fff;">自動配色</span>
           <button type="button" id="btnColorAuto" style="padding:3px 9px;font-size:12px;margin-left:auto;">恢復自動色</button>
@@ -3699,7 +3925,7 @@ function renderList() {
     const colorDot = `<span style="width:10px;height:10px;border-radius:3px;background:${ownBg};display:inline-block;flex-shrink:0;" title="任務專屬底色"></span>`;
 
     return `
-      <tr style="${r.depth > 0 ? "background:#fafcff;" : ""}">
+      <tr style="${r.depth > 0 ? "background:var(--row-sub-bg);" : ""}">
         <td>
           <div style="display:flex;align-items:center;gap:6px;padding-left:${r.depth * 20}px;">
             ${toggleBtn}
@@ -5412,6 +5638,50 @@ document.getElementById("filterAssignee").addEventListener("change", render);
 document.getElementById("searchBox").addEventListener("input", render);
 
 fetchState(true);
+/* ---------- 深色／淺色主題切換 ---------- */
+(function () {
+  var headBtn = document.getElementById("themeToggleBtn");
+  var fab = document.getElementById("themeFab");
+  var mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  function current() {
+    return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+  }
+  function apply(mode) {
+    var isDark = mode === "dark";
+    if (isDark) { document.documentElement.setAttribute("data-theme", "dark"); }
+    else { document.documentElement.removeAttribute("data-theme"); }
+    if (headBtn) {
+      headBtn.textContent = isDark ? "\u2600\uFE0F 淺色" : "\uD83C\uDF19 主題";
+      headBtn.title = isDark ? "目前為深色主題，點擊切換淺色" : "目前為淺色主題，點擊切換深色";
+    }
+    if (fab) {
+      fab.textContent = isDark ? "\u2600\uFE0F" : "\uD83C\uDF19";
+      fab.title = isDark ? "切換為淺色主題" : "切換為深色主題";
+    }
+  }
+  function toggle() {
+    var next = current() === "dark" ? "light" : "dark";
+    try { localStorage.setItem("pm_theme", next); } catch (e) {}
+    try {
+      if (location.search.indexOf("theme=") !== -1) {
+        var u = new URL(location.href);
+        u.searchParams.delete("theme");
+        history.replaceState(null, "", u.pathname + (u.search || "") + u.hash);
+      }
+    } catch (e) {}
+    apply(next);
+  }
+  apply(current());
+  if (headBtn) { headBtn.addEventListener("click", toggle); }
+  if (fab) { fab.addEventListener("click", toggle); }
+  if (mq && mq.addEventListener) {
+    mq.addEventListener("change", function (ev) {
+      var saved = null;
+      try { saved = localStorage.getItem("pm_theme"); } catch (e) {}
+      if (!saved) { apply(ev.matches ? "dark" : "light"); }
+    });
+  }
+})();
 setInterval(() => fetchState(false), 10000);
 </script>
 </body>
