@@ -2252,7 +2252,7 @@ const CLOUD_VIEW_UNLOCK_KEY = "pm_cloud_view_unlocked_v11";
 let cloudGhCfg = (() => {
   try {
     const raw = JSON.parse(localStorage.getItem(GH_CFG_STORAGE_KEY) || "null");
-    if (raw && raw.owner && raw.repo && raw.token) return raw;
+    if (raw && raw.owner && raw.repo && raw.token) { raw.filePath = sanitizeGhFilePath(raw.filePath); return raw; }
   } catch (_) {}
   return null;
 })();
@@ -2504,8 +2504,18 @@ function cloudPublicState(data) {
     me: me ? pubMem(me) : null,
   };
 }
+function sanitizeGhFilePath(raw) {
+  var s = String(raw == null ? "" : raw).trim().replace(/\\/g, "/").replace(/\u0000/g, "");
+  if (!s) return "project_data.json";
+  var absolute = false;
+  if (/^[A-Za-z]:/.test(s)) { absolute = true; s = s.slice(2).replace(/^\/+/, ""); }
+  if (s.charAt(0) === "/" || s.indexOf("~/") === 0) { absolute = true; }
+  if (absolute) { s = s.split("/").pop() || ""; }
+  var parts = s.split("/").filter(function (seg) { return seg && seg !== "." && seg !== ".."; });
+  return parts.join("/") || "project_data.json";
+}
 function cloudGhContentsUrl(cfg) {
-  const fp = String(cfg.filePath || "project_data.json").replace(/^\/+/, "").split("/").map(encodeURIComponent).join("/");
+  const fp = sanitizeGhFilePath(cfg.filePath).split("/").map(encodeURIComponent).join("/");
   return `https://api.github.com/repos/${encodeURIComponent(cfg.owner)}/${encodeURIComponent(cfg.repo)}/contents/${fp}`;
 }
 async function cloudGhGet(cfg, useEtag = true) {
@@ -2648,7 +2658,7 @@ function showGhConnectOverlay(errMsg = "") {
     document.getElementById("connOwner").value = cloudGhCfg.owner || "";
     document.getElementById("connRepo").value = cloudGhCfg.repo || "";
     document.getElementById("connBranch").value = cloudGhCfg.branch || "main";
-    document.getElementById("connFilePath").value = cloudGhCfg.filePath || "project_data.json";
+    document.getElementById("connFilePath").value = sanitizeGhFilePath(cloudGhCfg.filePath);
     document.getElementById("connToken").value = cloudGhCfg.token || "";
   }
   document.getElementById("ghConnectOverlay").classList.remove("hidden");
@@ -2663,7 +2673,7 @@ function parseQuickInviteCode(codeStr) {
     owner: String(obj.owner).trim(),
     repo: String(obj.repo).trim(),
     branch: String(obj.branch || "main").trim() || "main",
-    filePath: String(obj.filePath || "project_data.json").trim() || "project_data.json",
+    filePath: sanitizeGhFilePath(obj.filePath),
     token: String(obj.token).trim(),
   };
 }
@@ -4802,7 +4812,7 @@ async function loadGithubSyncSettingsUI() {
   document.getElementById("ghOwner").value = c.owner || "";
   document.getElementById("ghRepo").value = c.repo || "";
   document.getElementById("ghBranch").value = c.branch || "main";
-  document.getElementById("ghFilePath").value = c.filePath || "project_data.json";
+  document.getElementById("ghFilePath").value = sanitizeGhFilePath(c.filePath);
   document.getElementById("ghInterval").value = "10";
   document.getElementById("ghToken").value = "";
   document.getElementById("ghToken").placeholder = c.token ? "已儲存於本機瀏覽器（留空維持不變）" : "貼上 github_pat_...";
@@ -4816,7 +4826,7 @@ document.getElementById("btnSaveGhSync").addEventListener("click", async () => {
   const owner = document.getElementById("ghOwner").value.trim();
   const repo = document.getElementById("ghRepo").value.trim();
   const branch = document.getElementById("ghBranch").value.trim() || "main";
-  const filePath = document.getElementById("ghFilePath").value.trim() || "project_data.json";
+  const filePath = sanitizeGhFilePath(document.getElementById("ghFilePath").value);
   const token = document.getElementById("ghToken").value.trim() || (cloudGhCfg ? cloudGhCfg.token : "");
   if (!owner || !repo || !token) { alert("請填寫完整 GitHub 帳號、私有倉庫與 Token"); return; }
   cloudGhCfg = { owner, repo, branch, filePath, token };
@@ -4857,7 +4867,7 @@ document.getElementById("btnCopyCloudInvite").addEventListener("click", () => {
   const owner = document.getElementById("ghOwner").value.trim() || c.owner || "";
   const repo = document.getElementById("ghRepo").value.trim() || c.repo || "";
   const branch = document.getElementById("ghBranch").value.trim() || c.branch || "main";
-  const filePath = document.getElementById("ghFilePath").value.trim() || c.filePath || "project_data.json";
+  const filePath = sanitizeGhFilePath(document.getElementById("ghFilePath").value || c.filePath);
   const token = document.getElementById("ghToken").value.trim() || c.token || "";
   if (!owner || !repo || !token) { alert("請先完成 GitHub 連線設定"); return; }
   const code = "PMGH:" + b64EncodeUtf8(JSON.stringify({ owner, repo, branch, filePath, token }));
@@ -4874,7 +4884,7 @@ document.getElementById("btnApplyQuickCode").addEventListener("click", () => {
     document.getElementById("connOwner").value = parsed.owner;
     document.getElementById("connRepo").value = parsed.repo;
     document.getElementById("connBranch").value = parsed.branch;
-    document.getElementById("connFilePath").value = parsed.filePath;
+    document.getElementById("connFilePath").value = sanitizeGhFilePath(parsed.filePath);
     document.getElementById("connToken").value = parsed.token;
     showToast("已解析連線碼，請按「連線並載入專案資料」");
   } catch (e) {
@@ -4893,7 +4903,7 @@ document.getElementById("btnDoGhConnect").addEventListener("click", async () => 
     repo = ps[ps.length - 1] || "";
   }
   const branch = document.getElementById("connBranch").value.trim() || "main";
-  const filePath = document.getElementById("connFilePath").value.trim().replace(/^\/+/, "") || "project_data.json";
+  const filePath = sanitizeGhFilePath(document.getElementById("connFilePath").value);
   const token = document.getElementById("connToken").value.trim();
   if (!owner || !repo || !token) {
     errEl.textContent = "請填寫 GitHub 帳號、私有倉庫名稱與 Token（或先貼上快速連線碼）";
