@@ -1,0 +1,13 @@
+# 本機版執行時產生的資料與設定（此 repo 為公開，絕不可提交）
+project_data.json
+github_sync.json
+backups/
+shared_files/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# 系統雜項
+.DS_Store
+Thumbs.db

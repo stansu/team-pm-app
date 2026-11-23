@@ -91,6 +91,11 @@ Windows 把 `python3` 換成 `python`。有執行權限的話也可以 `./pm_ser
 - 若 Token 外流，請立即到 GitHub → Settings → Developer settings 撤銷並重新產生。
 - 本機版的 `project_data.json` 含全部專案內容，要分享給別人前請自行判斷。
 
+## 授權
+
+本專案採用 [MIT License](LICENSE)：可以自由使用、修改、散布（含商業用途與閉源專案），
+唯一條件是保留著作權聲明與授權全文。軟體不提供任何保證。
+
 ## 版本
 
 - `pm_server-v11.py`：本機版（含 GitHub 私有倉庫雙向同步、五段時間縮放、休假日截斷、四級權限、深色主題）
