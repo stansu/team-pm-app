@@ -3057,6 +3057,99 @@ html[data-theme="dark"] input[type="checkbox"], html[data-theme="dark"] input[ty
   box-shadow: 0 4px 14px rgba(0,0,0,.28);
 }
 html[data-theme="dark"] #themeFab { background: #1c2637; color: #fcd34d; border-color: var(--border); box-shadow: 0 4px 14px rgba(0,0,0,.55); }
+
+/* ==================== 手機 / 平板版面 ==================== */
+@media (max-width: 820px) {
+  :root { --left-w: 46vw; --row-h: 40px; }
+  body { font-size: 13px; }
+  header { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; gap: 6px; padding: 6px 8px;
+           -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
+  header > * { flex-shrink: 0; }
+  header::-webkit-scrollbar { height: 4px; }
+  header::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+  #projectSelect { max-width: 140px; font-size: 15px; padding: 5px 8px; }
+  .tab { padding: 6px 9px; font-size: 12.5px; }
+  .controls { gap: 5px; }
+  .controls button, .controls select { font-size: 12px; padding: 5px 8px; }
+  #searchBox { width: 104px !important; }
+  .spacer { flex: 0 0 4px; }
+  .legend-bar { flex-wrap: nowrap; overflow-x: auto; padding: 4px 10px; -webkit-overflow-scrolling: touch; }
+  .legend-bar > * { flex-shrink: 0; }
+  .gantt-toolbar { padding: 6px 10px; gap: 6px; font-size: 11.5px; }
+  .gantt-left-head { height: 44px; padding: 0 8px; font-size: 12px; }
+  .gantt-header { height: 44px; }
+  .gantt-months { height: 20px; font-size: 10px; }
+  .gantt-days { height: 24px; }
+  .gantt-day-cell { font-size: 9.5px; }
+  .gantt-row-label { font-size: 12px; padding: 0 6px; gap: 4px; }
+  .gantt-bar { font-size: 11px; padding: 0 6px; }
+  .gantt-bar.is-sub-bar { font-size: 10.5px; top: 9px; height: 22px; }
+  .member-pill, .sub-count-badge { font-size: 10px; padding: 1px 5px; }
+  .gantt-ms-label { font-size: 11px; margin-left: 6px; }
+  .panel-wrap { padding: 8px; }
+  .panel-wrap table { min-width: 760px; }
+  .kanban-wrap { padding: 10px; gap: 10px; scroll-snap-type: x mandatory; }
+  .kanban-col { width: 84vw; min-width: 84vw; scroll-snap-align: start; }
+  .modal { max-width: 100%; width: 100%; padding: 14px; border-radius: 14px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .member-grid { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); }
+  .kpi-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+  .kpi-val { font-size: 20px; }
+  .view-lock-card { padding: 22px 18px; }
+  .toast { bottom: 64px; max-width: calc(100vw - 24px); }
+  #themeFab { width: 38px; height: 38px; font-size: 16px; right: 12px; bottom: 12px; }
+  /* iOS 聚焦時避免自動放大 */
+  input[type="text"], input[type="password"], input[type="date"], input[type="datetime-local"],
+  input[type="number"], input[type="search"], select, textarea { font-size: 16px; }
+  /* 觸控拖曳任務條時，不要讓整頁跟著捲動 */
+  .gantt-bar, .gantt-ms-wrap, .resize-handle { touch-action: none; }
+}
+@media (max-width: 480px) {
+  :root { --left-w: 52vw; }
+  header { padding: 5px 6px; }
+  .tab { padding: 5px 7px; font-size: 11.5px; }
+  .controls button, .controls select { font-size: 11.5px; padding: 4px 6px; }
+  .gantt-toolbar { font-size: 11px; }
+  .panel-wrap table { min-width: 720px; }
+  .k-card-title { font-size: 13px; }
+}
+
+/* ==================== 手機版面：清單卡片化 / 甘特左欄精簡 ==================== */
+@media (max-width: 820px) {
+  .panel-wrap table.list-table { min-width: 0; width: 100%; background: transparent; box-shadow: none; border-radius: 0; }
+  .panel-wrap table.list-table thead { display: none; }
+  .panel-wrap table.list-table tbody,
+  .panel-wrap table.list-table tr,
+  .panel-wrap table.list-table td { display: block; width: auto; }
+  .panel-wrap table.list-table tr {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; margin-bottom: 10px; padding: 10px 12px;
+  }
+  .panel-wrap table.list-table td {
+    border: none; padding: 3px 0; font-size: 12.5px;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+  .panel-wrap table.list-table td::before {
+    content: attr(data-label); flex: 0 0 54px; color: var(--muted);
+    font-size: 11px; font-weight: 700;
+  }
+  .panel-wrap table.list-table td:first-child { padding-bottom: 6px; font-size: 14px; display: block; }
+  .panel-wrap table.list-table td:first-child::before { display: none; }
+  .gantt-row-label .color-pill, .gantt-row-label .gantt-prog-text { display: none; }
+  .readonly-banner { font-size: 11.5px; padding: 5px 12px; gap: 8px; }
+  .readonly-banner button { font-size: 11.5px; padding: 3px 8px; }
+  .gantt-toolbar .zoom-group { margin-left: auto; }
+}
+
+/* ==================== 手機版面：微調 ==================== */
+@media (max-width: 820px) {
+  .panel-wrap table.list-table td { padding: 2px 0; font-size: 12px; }
+  .panel-wrap table.list-table td::before { flex: 0 0 46px; font-size: 10.5px; }
+  .gantt-row-label .link-icon-btn { display: none; }
+}
+html[data-theme="dark"] .link-icon-btn[style] {
+  background: #1c2637 !important; color: #93c5fd !important; border-color: #2b3749 !important;
+}
 </style>
 </head>
 <body>
@@ -5026,7 +5119,7 @@ function renderGantt() {
         ${addSubBtn}
         ${linkBtn}
         <span class="color-pill" style="background:${sem.bg};color:${sem.fg};" title="${esc(sem.title)}">${esc(sem.badge)}</span>
-        <span style="font-size:11px;color:var(--muted);width:30px;text-align:right;">${progText}</span>
+        <span class="gantt-prog-text" style="font-size:11px;color:var(--muted);width:30px;text-align:right;">${progText}</span>
       </div>
     `;
   }).join("");
@@ -5220,7 +5313,8 @@ function renderGantt() {
   });
 
   rightEl.querySelectorAll(".gantt-bar, .gantt-ms-wrap").forEach(item => {
-    item.addEventListener("mousedown", e => {
+    item.addEventListener("pointerdown", e => {
+      if (e.pointerType === "mouse" && e.button !== 0) return;
       e.preventDefault();
       const id = item.dataset.id;
       const task = allTasks.find(t => t.id === id);
@@ -5263,7 +5357,7 @@ window.scrollToToday = function() {
   if (rightEl && line) rightEl.scrollLeft = Math.max(0, parseFloat(line.style.left) - 220);
 };
 
-document.addEventListener("mousemove", e => {
+document.addEventListener("pointermove", e => {
   if (!dragState) return;
   const dx = e.clientX - dragState.startX;
   const rawMins = (dx / ganttMetrics.pxPerHour) * 60;
@@ -5323,7 +5417,7 @@ document.addEventListener("mousemove", e => {
   tip.textContent = dragState.isMs ? `◆ ${fmtDisplayDT(ns)}` : `${fmtDisplayDT(ns)} ~ ${fmtDisplayDT(ne)}`;
 });
 
-document.addEventListener("mouseup", async () => {
+document.addEventListener("pointerup", async () => {
   if (!dragState) return;
   const ds = dragState;
   dragState = null;
@@ -5336,6 +5430,14 @@ document.addEventListener("mouseup", async () => {
   const updated = { ...ds.task, start: ds.newStart, end: ds.isMs ? ds.newStart : ds.newEnd };
   await apiPost("/api/task", { task: updated });
 });
+
+document.addEventListener("pointercancel", () => {
+  if (!dragState) return;
+  dragState = null;
+  const tip = document.getElementById("dragTip");
+  if (tip) tip.style.display = "none";
+});
+
 
 function renderKanban() {
   const proj = getActiveProject();
@@ -5460,15 +5562,15 @@ function renderList() {
           </div>
           ${t.notes ? `<div style="font-size:12px;color:var(--muted);margin-top:2px;padding-left:${r.depth * 20 + 26}px;">${esc(t.notes)}</div>` : ""}
         </td>
-        <td><span class="color-pill" style="background:${asBg};color:${contrastTextColor(asBg)};">${esc(t.assignee)}</span></td>
-        <td><span class="color-pill" style="background:${stBg};color:${contrastTextColor(stBg)};">${STATUS_MAP[t.status] || t.status}</span></td>
-        <td><span class="color-pill" style="background:${prBg};color:${contrastTextColor(prBg)};">${PRIO_MAP[t.priority] || t.priority}</span></td>
-        <td style="white-space:nowrap;font-size:12px;">${esc(dateText)}</td>
-        <td style="white-space:nowrap;font-size:12px;">${t.actualEnd ? esc(fmtDisplayDT(t.actualEnd)) : '<span style="color:#9ca3af;">—</span>'}</td>
-        <td><span class="color-pill" style="background:${vBg};color:${contrastTextColor(vBg)};" title="${esc(vInfo.fullLabel)}">${esc(vInfo.shortLabel)}</span></td>
-        <td>${t.isMilestone ? (t.status === "done" ? "已達成" : "未達成") : `${t.progress}%`}</td>
-        <td><div style="display:flex;flex-wrap:wrap;gap:4px;">${linksHtml}</div></td>
-        <td><button onclick="openTaskModal('${esc(t.id)}')">${editable ? "編輯" : "檢視"}</button></td>
+        <td data-label="負責人"><span class="color-pill" style="background:${asBg};color:${contrastTextColor(asBg)};">${esc(t.assignee)}</span></td>
+        <td data-label="狀態"><span class="color-pill" style="background:${stBg};color:${contrastTextColor(stBg)};">${STATUS_MAP[t.status] || t.status}</span></td>
+        <td data-label="優先級"><span class="color-pill" style="background:${prBg};color:${contrastTextColor(prBg)};">${PRIO_MAP[t.priority] || t.priority}</span></td>
+        <td data-label="預期時間" style="white-space:nowrap;font-size:12px;">${esc(dateText)}</td>
+        <td data-label="實際完成" style="white-space:nowrap;font-size:12px;">${t.actualEnd ? esc(fmtDisplayDT(t.actualEnd)) : '<span style="color:#9ca3af;">—</span>'}</td>
+        <td data-label="偏差"><span class="color-pill" style="background:${vBg};color:${contrastTextColor(vBg)};" title="${esc(vInfo.fullLabel)}">${esc(vInfo.shortLabel)}</span></td>
+        <td data-label="進度">${t.isMilestone ? (t.status === "done" ? "已達成" : "未達成") : `${t.progress}%`}</td>
+        <td data-label="檔案連結"><div style="display:flex;flex-wrap:wrap;gap:4px;">${linksHtml}</div></td>
+        <td data-label="操作"><button onclick="openTaskModal('${esc(t.id)}')">${editable ? "編輯" : "檢視"}</button></td>
       </tr>
     `;
   }).join("");
@@ -5480,7 +5582,7 @@ function renderList() {
         <button onclick="collapseAllSubtasks()">▸ 全部收合</button>
         <span style="font-size:12px;color:var(--muted);">共顯示 ${tree.rows.length} 筆項目（含小時與分鐘時間、子任務收合與實際完成比較）</span>
       </div>
-      <table>
+      <table class="list-table">
         <thead>
           <tr>
             <th>任務 / 子任務階層</th><th>負責人</th><th>狀態</th><th>優先級</th>
