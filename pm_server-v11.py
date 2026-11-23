@@ -3150,6 +3150,18 @@ html[data-theme="dark"] #themeFab { background: #1c2637; color: #fcd34d; border-
 html[data-theme="dark"] .link-icon-btn[style] {
   background: #1c2637 !important; color: #93c5fd !important; border-color: #2b3749 !important;
 }
+
+/* ==================== 甘特左欄寬度拖曳 ==================== */
+.gantt-splitter {
+  flex: 0 0 6px; width: 6px; cursor: col-resize; position: relative;
+  z-index: 12; touch-action: none; background: transparent;
+}
+.gantt-splitter::after {
+  content: ""; position: absolute; top: 0; bottom: 0; left: 2px; width: 2px;
+  background: var(--border); transition: background .15s;
+}
+.gantt-splitter:hover::after, .gantt-splitter.dragging::after { background: var(--primary); }
+@media (max-width: 820px) { .gantt-splitter { flex: 0 0 10px; width: 10px; } }
 </style>
 </head>
 <body>
@@ -5052,6 +5064,65 @@ function msToX(ms) {
   return ((ms - ganttMetrics.rangeStartMs) / 3600000) * ganttMetrics.pxPerHour;
 }
 
+/* ---------- 甘特圖左欄寬度（可拖曳、記住設定） ---------- */
+function clampGanttLeftWidth(px) {
+  const vw = window.innerWidth;
+  const max = vw < 820
+    ? Math.max(120, Math.min(vw * 0.75, vw - 120))
+    : Math.max(240, Math.min(760, vw - 220));
+  const min = vw < 820 ? 100 : 150;
+  return Math.max(min, Math.min(max, Math.round(px)));
+}
+function ganttSavedLeftWidth() {
+  try { return parseInt(localStorage.getItem("pm_left_w") || "0", 10) || 0; } catch (e) { return 0; }
+}
+function applyGanttLeftWidth(px) {
+  if (px == null) { document.documentElement.style.removeProperty("--left-w"); return; }
+  document.documentElement.style.setProperty("--left-w", clampGanttLeftWidth(px) + "px");
+}
+function restoreGanttLeftWidth() {
+  const saved = ganttSavedLeftWidth();
+  if (saved) applyGanttLeftWidth(saved);
+}
+window.addEventListener("resize", () => {
+  const saved = ganttSavedLeftWidth();
+  if (saved) applyGanttLeftWidth(saved);
+});
+restoreGanttLeftWidth();
+
+function wireGanttSplitter() {
+  const splitter = document.getElementById("ganttSplitter");
+  if (!splitter) return;
+  splitter.addEventListener("pointerdown", e => {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    e.preventDefault();
+    const leftEl = document.querySelector(".gantt-left");
+    if (!leftEl) return;
+    const startX = e.clientX;
+    const startW = leftEl.getBoundingClientRect().width;
+    splitter.classList.add("dragging");
+    const onMove = ev => applyGanttLeftWidth(startW + (ev.clientX - startX));
+    const onEnd = () => {
+      splitter.classList.remove("dragging");
+      document.removeEventListener("pointermove", onMove);
+      document.removeEventListener("pointerup", onEnd);
+      document.removeEventListener("pointercancel", onEnd);
+      const el = document.querySelector(".gantt-left");
+      if (el) {
+        const w = clampGanttLeftWidth(el.getBoundingClientRect().width);
+        try { localStorage.setItem("pm_left_w", String(w)); } catch (e) {}
+      }
+    };
+    document.addEventListener("pointermove", onMove);
+    document.addEventListener("pointerup", onEnd);
+    document.addEventListener("pointercancel", onEnd);
+  });
+  splitter.addEventListener("dblclick", () => {
+    try { localStorage.removeItem("pm_left_w"); } catch (e) {}
+    document.documentElement.style.removeProperty("--left-w");
+  });
+}
+
 function renderGantt() {
   const proj = getActiveProject();
   const allTasks = proj.tasks || [];
@@ -5279,6 +5350,7 @@ function renderGantt() {
         <div class="gantt-left-head">任務階層 / 連結 / 底色標記 / 進度</div>
         <div class="gantt-left-body" id="ganttLeftBody">${leftRows || '<div style="padding:16px;color:var(--muted);font-size:13px;">此專案尚無任務</div>'}</div>
       </div>
+      <div class="gantt-splitter" id="ganttSplitter" title="拖曳調整左欄寬度（雙擊回復預設）"></div>
       <div class="gantt-right" id="ganttRight">
         <div class="gantt-canvas" style="width:${totalW}px;">
           <div class="gantt-header">
@@ -5304,6 +5376,8 @@ function renderGantt() {
   const leftEl = document.getElementById("ganttLeftBody");
   rightEl.addEventListener("scroll", () => { leftEl.scrollTop = rightEl.scrollTop; });
   rightEl.scrollLeft = Math.max(0, nowLeft - 220);
+
+  wireGanttSplitter();
 
   leftEl.querySelectorAll(".gantt-row-label").forEach(el => {
     el.addEventListener("click", e => {
