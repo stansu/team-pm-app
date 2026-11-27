@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+(function(){try{var s=localStorage.getItem("pm_theme");if(s!=="dark"&&s!=="light"){s=(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)?"dark":"light";}if(s==="dark"){document.documentElement.setAttribute("data-theme","dark");}}catch(e){}})();
+</script>
+<title>施工監理日報（雲端版）</title>
+<style>
+:root{
+  --bg:#f4f6fa; --panel:#ffffff; --panel2:#f8fafc; --line:#dfe5ee; --text:#16233a;
+  --muted:#64748b; --accent:#2563eb; --accent-ink:#fff; --good:#0f766e; --warn:#b45309;
+  --bad:#b91c1c; --chip:#eef2f9; --shadow:0 1px 2px rgba(15,23,42,.06),0 8px 24px rgba(15,23,42,.06);
+  --radius:12px;
+}
+html[data-theme="dark"]{
+  --bg:#0d1420; --panel:#141d2b; --panel2:#101827; --line:#243044; --text:#e6edf7;
+  --muted:#93a4bd; --accent:#3b82f6; --accent-ink:#fff; --good:#2dd4bf; --warn:#fbbf24;
+  --bad:#f87171; --chip:#1b2637; --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 26px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.55 -apple-system,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;}
+h1,h2,h3{margin:0;}
+button,input,select,textarea{font:inherit;color:inherit;}
+.hidden{display:none !important;}
+.topbar{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+  padding:10px 14px;background:var(--panel);border-bottom:1px solid var(--line);box-shadow:var(--shadow);}
+.brand{font-size:15.5px;font-weight:800;}
+.brand small{font-weight:600;color:var(--muted);font-size:11.5px;margin-left:6px;}
+.top-actions{margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.chip{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12px;color:var(--muted);}
+.chip.ok{color:var(--good);border-color:color-mix(in srgb,var(--good) 40%,var(--line));}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:9px;padding:6px 12px;cursor:pointer;font-size:13px;}
+.btn:hover{border-color:var(--accent);}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700;}
+.btn.sm{padding:4px 9px;font-size:12px;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+a.btn{text-decoration:none;}
+.banner{padding:8px 14px;background:#fff7ed;color:#9a3412;font-size:12.5px;border-bottom:1px solid #fed7aa;}
+html[data-theme="dark"] .banner{background:#2a1c10;color:#fbbf24;border-color:#4a2f14;}
+.layout{display:grid;grid-template-columns:320px minmax(0,1fr);gap:12px;padding:12px;align-items:start;}
+@media (max-width:900px){ .layout{grid-template-columns:1fr;} }
+.list-pane,.form-pane{min-width:0;}
+.list-pane{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+.pane-head{padding:10px;display:grid;gap:8px;border-bottom:1px solid var(--line);}
+.pane-head .row{display:flex;gap:6px;}
+input,select,textarea{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:6px 8px;width:100%;min-width:0;}
+input:focus,select:focus,textarea:focus{outline:2px solid color-mix(in srgb,var(--accent) 35%,transparent);border-color:var(--accent);}
+.summary{display:flex;gap:6px;flex-wrap:wrap;padding:8px 10px;border-bottom:1px solid var(--line);font-size:12px;color:var(--muted);}
+.summary b{color:var(--text);}
+.list{max-height:calc(100vh - 210px);overflow:auto;}
+@media (max-width:900px){ .list{max-height:44vh;} }
+.rec{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:9px 11px;cursor:pointer;}
+.rec:hover{background:var(--panel2);}
+.rec.on{background:color-mix(in srgb,var(--accent) 10%,var(--panel));box-shadow:inset 3px 0 0 var(--accent);}
+.rec .l1{display:flex;gap:6px;align-items:baseline;font-weight:700;font-size:13px;}
+.rec .l1 span.date{font-variant-numeric:tabular-nums;}
+.rec .l1 .wk{color:var(--muted);font-weight:500;font-size:11.5px;}
+.rec .l2{color:var(--muted);font-size:12px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.rec .tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;}
+.tag{font-size:11px;padding:1px 6px;border-radius:999px;background:var(--chip);color:var(--muted);border:1px solid var(--line);}
+.tag.bad{background:#fee2e2;color:#991b1b;border-color:#fecaca;}
+html[data-theme="dark"] .tag.bad{background:#3a1414;color:#fca5a5;border-color:#5b2020;}
+.empty{padding:40px 20px;text-align:center;color:var(--muted);}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px;margin-bottom:12px;}
+.card-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+.card-head h2{font-size:13.5px;letter-spacing:.3px;}
+.card-head .hint{margin-left:auto;font-size:11.5px;color:var(--muted);}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;}
+@media (max-width:700px){ .grid3{grid-template-columns:repeat(2,minmax(0,1fr));} }
+label.f{display:grid;gap:3px;font-size:12px;color:var(--muted);}
+label.f input,label.f select{color:var(--text);}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media (max-width:820px){ .two-col{grid-template-columns:1fr;} }
+.subhead{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;margin:2px 0 6px;}
+.subhead .btn{margin-left:auto;}
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:9px;}
+table.grid{width:100%;border-collapse:collapse;font-size:12.5px;}
+table.grid th{background:var(--panel2);text-align:left;font-weight:700;color:var(--muted);font-size:11.5px;padding:5px 6px;border-bottom:1px solid var(--line);white-space:nowrap;}
+table.grid td{padding:3px 4px;border-bottom:1px solid var(--line);vertical-align:middle;}
+table.grid tr:last-child td{border-bottom:0;}
+table.grid input,table.grid select{padding:4px 6px;border-radius:6px;font-size:12.5px;background:transparent;border-color:transparent;}
+table.grid input:hover,table.grid select:hover{border-color:var(--line);}
+table.grid th.th-num,table.grid td.td-num{width:74px;}
+.x{border:0;background:none;color:var(--muted);cursor:pointer;padding:2px 5px;border-radius:6px;font-size:12px;}
+.x:hover{color:var(--bad);background:var(--chip);}
+.photo-tools{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px;}
+.photo-tools select{width:auto;}
+.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;}
+.ph{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel2);position:relative;}
+.ph .ph-img{display:block;width:100%;height:110px;object-fit:cover;background:#00000010;}
+.ph .loading{display:grid;place-items:center;height:110px;color:var(--muted);font-size:11.5px;}
+.ph .cap{border:0;border-top:1px solid var(--line);border-radius:0;font-size:11.5px;padding:4px 6px;background:var(--panel);}
+.ph .meta{font-size:10.5px;color:var(--muted);padding:0 6px 4px;background:var(--panel);}
+.ph .del{position:absolute;top:4px;right:4px;background:#000000a8;color:#fff;border:0;border-radius:6px;width:22px;height:22px;cursor:pointer;font-size:12px;}
+textarea#fSummary{min-height:74px;resize:vertical;}
+.form-foot{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px;}
+.form-foot .spacer{margin-left:auto;}
+.small{font-size:11.5px;color:var(--muted);}
+.overlay{position:fixed;inset:0;z-index:60;background:#0b1220cc;display:grid;place-items:center;padding:14px;}
+.overlay .box{background:var(--panel);border-radius:14px;box-shadow:var(--shadow);width:min(560px,100%);max-height:90vh;overflow:auto;padding:16px;}
+.overlay .box h3{font-size:15px;margin-bottom:6px;}
+.overlay .box .fields{display:grid;gap:8px;margin:10px 0;}
+.overlay .box .fields label{display:grid;gap:3px;font-size:12px;color:var(--muted);}
+.overlay .box .fields input{color:var(--text);}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#111827;color:#fff;padding:8px 14px;border-radius:10px;font-size:13px;z-index:90;box-shadow:var(--shadow);max-width:92vw;}
+.print-area{display:none;}
+@media print{
+  @page{size:A4;margin:13mm;}
+  body{background:#fff;color:#000;font-size:10.5pt;}
+  body>*:not(.print-area){display:none !important;}
+  .print-area{display:block !important;}
+  .print-area h1{font-size:16pt;text-align:center;margin:0 0 2mm;letter-spacing:1px;}
+  .print-area .meta{font-size:9pt;text-align:center;color:#444;margin-bottom:4mm;}
+  .print-area table{width:100%;border-collapse:collapse;margin-bottom:3mm;}
+  .print-area th,.print-area td{border:1px solid #555;padding:1.6mm 2mm;font-size:9.5pt;vertical-align:top;}
+  .print-area th{background:#f1f3f7;text-align:left;}
+  .print-area h2{font-size:10.5pt;margin:4mm 0 1.5mm;border-left:3px solid #333;padding-left:2mm;}
+  .print-area .ph3{display:flex;flex-wrap:wrap;gap:3mm;}
+  .print-area .ph3 figure{margin:0;width:31%;}
+  .print-area .ph3 img{width:100%;height:38mm;object-fit:cover;border:1px solid #999;}
+  .print-area .ph3 figcaption{font-size:8.5pt;color:#333;padding-top:.6mm;}
+  .print-area .sign{display:flex;gap:8mm;margin-top:8mm;font-size:9.5pt;}
+  .print-area .sign div{flex:1;border-top:1px solid #333;padding-top:1.5mm;}
+}
+</style>
+</head>
+<body>
+
+<div id="setupOverlay" class="overlay hidden">
+  <div class="box">
+    <h3>連線到 GitHub 私有倉庫</h3>
+    <p class="small">日報會存成 <b id="setupDataPathLabel">report_data.json</b>，照片另存 <b>reports/photos/</b>。資料只在你的私有 repo，這個頁面本身不含任何資料。</p>
+    <div class="fields">
+      <label>快速連線碼（可選）<input id="setQuick" placeholder="貼上 PMGH:... 會自動填入"></label>
+      <label>帳號 Owner<input id="setOwner" placeholder="stansu" autocomplete="off"></label>
+      <label>私有倉庫 Repo<input id="setRepo" placeholder="team-pm-data" autocomplete="off"></label>
+      <label>分支 Branch<input id="setBranch" placeholder="main" value="main"></label>
+      <label>日報資料檔路徑<input id="setDataPath" value="report_data.json"></label>
+      <label>Fine-grained Token（只需 Contents 讀寫）<input id="setToken" type="password" autocomplete="off"></label>
+    </div>
+    <div class="form-foot">
+      <span class="small" id="setupErr" style="color:var(--bad);"></span>
+      <span class="spacer"></span>
+      <button class="btn" id="btnSetupClose" type="button">取消</button>
+      <button class="btn" id="btnSetupTest" type="button">測試連線</button>
+      <button class="btn primary" id="btnSetupSave" type="button">儲存並連線</button>
+    </div>
+    <p class="small" style="margin-top:10px;">Token 只存在這台裝置的瀏覽器，不會上傳。若外流請立即到 GitHub 撤銷。</p>
+  </div>
+</div>
+
+<header class="topbar">
+  <div class="brand">📋 施工監理日報<small>雲端版 · 存私有 repo</small></div>
+  <div class="top-actions">
+    <span class="chip" id="connChip">未連線</span>
+    <a class="btn" href="../">← 排程</a>
+    <button class="btn" id="btnSettings">⚙ 連線</button>
+    <button class="btn" id="btnPrint">列印</button>
+    <button class="btn primary" id="btnSave">儲存</button>
+  </div>
+</header>
+<div id="banner" class="banner hidden"></div>
+
+<main class="layout">
+  <aside class="list-pane">
+    <div class="pane-head">
+      <input id="q" placeholder="搜尋專案、備註、缺失…">
+      <div class="row">
+        <select id="fMonth"><option value="">全部月份</option></select>
+        <button class="btn primary" id="btnNew">＋ 新日報</button>
+      </div>
+    </div>
+    <div class="summary" id="summary"></div>
+    <div class="list" id="list"></div>
+  </aside>
+
+  <section class="form-pane">
+    <div id="empty" class="empty">左邊選一份日報，或按「＋ 新日報」開始記錄。</div>
+    <div id="form" class="hidden">
+      <div class="card">
+        <div class="card-head">
+          <h2>表頭</h2>
+          <button class="btn sm" id="btnCopyPrev" type="button" title="複製最近一份的人力、機具、工項">沿用上一份</button>
+          <span class="hint" id="dirtyHint"></span>
+        </div>
+        <div class="grid3">
+          <label class="f">日期<input type="date" id="fDate"></label>
+          <label class="f">專案<input id="fProject" list="projList" placeholder="工地／案名"><datalist id="projList"></datalist></label>
+          <label class="f">天候<select id="fWeather"></select></label>
+          <label class="f">氣溫<input id="fTemp" placeholder="例如 24–30℃"></label>
+          <label class="f">填寫人<input id="fReporter" placeholder="你的名字"></label>
+          <label class="f">出工合計<input id="fWorkerSum" readonly></label>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>出工與機具</h2><span class="hint">人力算人日，機具算台班</span></div>
+        <div class="two-col">
+          <div>
+            <div class="subhead">人力<button class="btn sm" type="button" data-add="workers">＋ 一列</button></div>
+            <div class="table-wrap"><table class="grid" id="tblWorkers"></table></div>
+          </div>
+          <div>
+            <div class="subhead">機具<button class="btn sm" type="button" data-add="machines">＋ 一列</button></div>
+            <div class="table-wrap"><table class="grid" id="tblMachines"></table></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>工項與數量</h2><span class="hint">今日完成量與累計</span></div>
+        <div class="subhead">工項<button class="btn sm" type="button" data-add="items">＋ 一列</button></div>
+        <div class="table-wrap"><table class="grid" id="tblItems"></table></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>材料進場</h2></div>
+        <div class="subhead">材料<button class="btn sm" type="button" data-add="materials">＋ 一列</button></div>
+        <div class="table-wrap"><table class="grid" id="tblMaterials"></table></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>查驗紀錄</h2><span class="hint">不合格請在缺失開單追蹤</span></div>
+        <div class="subhead">查驗<button class="btn sm" type="button" data-add="inspections">＋ 一列</button></div>
+        <div class="table-wrap"><table class="grid" id="tblInspections"></table></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>缺失改善</h2><span class="hint" id="defectHint"></span></div>
+        <div class="subhead">缺失<button class="btn sm" type="button" data-add="defects">＋ 一列</button></div>
+        <div class="table-wrap"><table class="grid" id="tblDefects"></table></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>現場照片</h2><span class="hint" id="photoStatus"></span></div>
+        <div class="photo-tools">
+          <button class="btn sm" id="btnCamera" type="button">📷 拍照</button>
+          <button class="btn sm" id="btnPickFiles" type="button">🖼 選照片</button>
+          <select id="photoPreset" title="上傳前會先縮圖，減少 repo 容量">
+            <option value="small">省空間（約 80KB）</option>
+            <option value="normal">標準（約 150KB）</option>
+            <option value="high">高畫質（約 350KB）</option>
+          </select>
+          <span class="small" id="photoTotal"></span>
+        </div>
+        <input type="file" id="fileCamera" accept="image/*" capture="environment" class="hidden">
+        <input type="file" id="filePick" accept="image/*" multiple class="hidden">
+        <div class="photo-grid" id="photoGrid"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>摘要與其他事項</h2></div>
+        <textarea id="fSummary" placeholder="今日概況、指示事項、待處理問題…"></textarea>
+        <div class="form-foot">
+          <span class="small" id="metaInfo"></span>
+          <span class="spacer"></span>
+          <button class="btn" id="btnDelete" type="button">刪除此日報</button>
+          <button class="btn primary" id="btnSave2" type="button">儲存</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="printArea" class="print-area"></div>
+<div id="toast" class="toast hidden"></div>
+
+<script>
+"use strict";
+const $ = (s, el = document) => el.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+const CFG_KEY = "pm_cloud_report_gh_v1";
+const SHARED_CFG_KEY = "pm_cloud_gh_cfg_v11";
+const PRESET_KEY = "pm_report_photo_preset";
+const NAME_KEY = "pm_report_name";
+const GH_API = "https://api.github.com";
+const DEFAULT_DATA_PATH = "report_data.json";
+
+const WEATHER = ["晴", "多雲", "陰", "雨", "豪雨", "颱風"];
+const INSPECT = ["合格", "不合格", "待驗", "不適用"];
+const DEFECT_STATES = ["待改善", "已改善", "複驗合格", "已結案"];
+
+const PRESETS = {
+  small: { edge: 1024, q: 0.6, label: "省空間" },
+  normal: { edge: 1280, q: 0.7, label: "標準" },
+  high: { edge: 1920, q: 0.8, label: "高畫質" },
+};
+
+const S = {
+  cfg: null, dataPath: DEFAULT_DATA_PATH,
+  reports: [], lastSync: "", projects: [],
+  cur: null, dirty: false, saving: false, busyPhotos: false,
+  preset: localStorage.getItem(PRESET_KEY) || "normal",
+  name: localStorage.getItem(NAME_KEY) || "",
+  photoCache: new Map(), photoPromises: new Map(),
+};
+
+const SCHEMAS = {
+  workers: [
+    { k: "trade", label: "工種", ph: "模板工" },
+    { k: "count", label: "人數", ph: "4", w: "num" },
+  ],
+  machines: [
+    { k: "name", label: "機具名稱", ph: "挖土機" },
+    { k: "count", label: "數量", ph: "1", w: "num" },
+  ],
+  items: [
+    { k: "name", label: "工項", ph: "1F 樑鋼筋綁紮" },
+    { k: "unit", label: "單位", ph: "式", w: "num" },
+    { k: "today", label: "今日", ph: "0", w: "num" },
+    { k: "total", label: "累計", ph: "0", w: "num" },
+    { k: "note", label: "備註", ph: "" },
+  ],
+  materials: [
+    { k: "name", label: "材料", ph: "#5 鋼筋" },
+    { k: "qty", label: "數量", ph: "2.5 t", w: "num" },
+    { k: "note", label: "備註", ph: "" },
+  ],
+  inspections: [
+    { k: "name", label: "查驗項目", ph: "鋼筋間距" },
+    { k: "result", label: "結果", select: "inspect", w: "num" },
+    { k: "note", label: "備註", ph: "" },
+  ],
+  defects: [
+    { k: "desc", label: "缺失內容", ph: "保護層不足" },
+    { k: "dueDate", label: "改善期限", date: true, w: "num" },
+    { k: "status", label: "狀態", select: "defect", w: "num" },
+    { k: "note", label: "備註", ph: "" },
+  ],
+};
+
+/* ---------- 小工具 ---------- */
+function todayStr() {
+  const d = new Date(), p = n => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+function weekdayOf(s) {
+  const d = new Date(`${s}T12:00:00`);
+  return Number.isNaN(d.getTime()) ? "" : "週" + "日一二三四五六"[d.getDay()];
+}
+function fmtSize(n) {
+  if (!n) return "0 KB";
+  return n >= 1024 * 1024 ? (n / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(n / 1024)) + " KB";
+}
+function nowStr() {
+  const d = new Date(), p = n => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+}
+function toast(msg, ms = 2600) {
+  const t = $("#toast");
+  t.textContent = msg;
+  t.classList.remove("hidden");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => t.classList.add("hidden"), ms);
+}
+const deep = o => JSON.parse(JSON.stringify(o));
+
+function b64ToUtf8(b64) {
+  const bin = atob(String(b64 || "").replace(/\s+/g, ""));
+  const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+  return new TextDecoder("utf-8").decode(bytes);
+}
+function utf8ToB64(str) {
+  const bytes = new TextEncoder().encode(str);
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 8192) bin += String.fromCharCode(...bytes.subarray(i, i + 8192));
+  return btoa(bin);
+}
+async function blobToB64(blob) {
+  const buf = new Uint8Array(await blob.arrayBuffer());
+  let bin = "";
+  for (let i = 0; i < buf.length; i += 8192) bin += String.fromCharCode(...buf.subarray(i, i + 8192));
+  return btoa(bin);
+}
+
+/* ---------- 連線設定 ---------- */
+function sanitizePath(raw, fallback) {
+  const s = String(raw || "").replace(/\\/g, "/").replace(/\u0000/g, "").trim();
+  const parts = s.split("/").filter(seg => seg && seg !== "." && seg !== "..");
+  return parts.join("/") || fallback;
+}
+function normalizeCfg(raw) {
+  if (!raw || !raw.owner || !raw.repo || !raw.token) return null;
+  return {
+    owner: String(raw.owner).trim().replace(/^\/+|\/+$/g, ""),
+    repo: String(raw.repo).trim().replace(/^\/+|\/+$/g, "").replace(/\.git$/, ""),
+    branch: String(raw.branch || "main").trim() || "main",
+    token: String(raw.token).trim(),
+    dataPath: sanitizePath(raw.dataPath, DEFAULT_DATA_PATH),
+    projectPath: sanitizePath(raw.projectPath, "project_data.json"),
+  };
+}
+function loadCfg() {
+  try {
+    const saved = normalizeCfg(JSON.parse(localStorage.getItem(CFG_KEY) || "null"));
+    if (saved) return saved;
+  } catch (e) {}
+  try {
+    const shared = JSON.parse(localStorage.getItem(SHARED_CFG_KEY) || "null");
+    if (shared && shared.owner && shared.repo && shared.token) {
+      return normalizeCfg({ owner: shared.owner, repo: shared.repo, branch: shared.branch, token: shared.token });
+    }
+  } catch (e) {}
+  return null;
+}
+function saveCfg(cfg) {
+  localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
+}
+function ghContentsUrl(path) {
+  const p = path.split("/").map(encodeURIComponent).join("/");
+  return `${GH_API}/repos/${encodeURIComponent(S.cfg.owner)}/${encodeURIComponent(S.cfg.repo)}/contents/${p}`;
+}
+function ghHeaders(extra) {
+  return Object.assign({
+    Authorization: `Bearer ${S.cfg.token}`,
+    Accept: "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28",
+  }, extra || {});
+}
+async function ghRequest(url, opts = {}) {
+  let res;
+  try {
+    res = await fetch(url, Object.assign({ cache: "no-store" }, opts));
+  } catch (e) {
+    throw new Error("連不到 GitHub，請檢查網路後重試");
+  }
+  if (res.status === 401) throw new Error("GitHub Token 無效或已過期");
+  if (res.status === 403) {
+    let msg = "";
+    try { msg = (await res.clone().json()).message || ""; } catch (e) {}
+    throw new Error(`GitHub 拒絕存取：${msg || "Token 權限不足或流量限制"}`);
+  }
+  return res;
+}
+async function ghGetJson(path) {
+  const res = await ghRequest(`${ghContentsUrl(path)}?ref=${encodeURIComponent(S.cfg.branch)}`, { headers: ghHeaders() });
+  if (res.status === 404) return { status: "not_found" };
+  if (!res.ok) throw new Error(`讀取失敗（HTTP ${res.status}）`);
+  const body = await res.json();
+  let json;
+  try { json = JSON.parse(b64ToUtf8(body.content || "")); }
+  catch (e) { throw new Error("資料檔不是有效 JSON，請確認路徑是否正確"); }
+  return { status: "ok", json, sha: body.sha || "" };
+}
+async function ghPutJson(path, obj, sha, message) {
+  const payload = {
+    message: message || "Update report_data.json",
+    content: utf8ToB64(JSON.stringify(obj, null, 2)),
+    branch: S.cfg.branch,
+  };
+  if (sha) payload.sha = sha;
+  const res = await ghRequest(ghContentsUrl(path), {
+    method: "PUT",
+    headers: ghHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify(payload),
+  });
+  if (res.status === 409 || res.status === 422) return { status: "conflict" };
+  if (!res.ok) throw new Error(`寫入失敗（HTTP ${res.status}）`);
+  const body = await res.json();
+  return { status: "ok", sha: (body.content && body.content.sha) || "" };
+}
+async function ghPutBlob(path, blob, message) {
+  const payload = {
+    message: message || `Add ${path}`,
+    content: await blobToB64(blob),
+    branch: S.cfg.branch,
+  };
+  const res = await ghRequest(ghContentsUrl(path), {
+    method: "PUT",
+    headers: ghHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`照片上傳失敗（HTTP ${res.status}）`);
+  const body = await res.json();
+  return (body.content && body.content.sha) || "";
+}
+async function ghGetBlob(path) {
+  const res = await ghRequest(`${ghContentsUrl(path)}?ref=${encodeURIComponent(S.cfg.branch)}`, { headers: ghHeaders() });
+  if (!res.ok) throw new Error(`照片讀取失敗（HTTP ${res.status}）`);
+  const body = await res.json();
+  const bin = atob(String(body.content || "").replace(/\s+/g, ""));
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new Blob([bytes], { type: "image/jpeg" });
+}
+async function ghDeleteFile(path, message) {
+  const info = await ghRequest(`${ghContentsUrl(path)}?ref=${encodeURIComponent(S.cfg.branch)}`, { headers: ghHeaders() });
+  if (!info.ok) return;
+  const body = await info.json();
+  await ghRequest(ghContentsUrl(path), {
+    method: "DELETE",
+    headers: ghHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify({ message: message || `Delete ${path}`, sha: body.sha, branch: S.cfg.branch }),
+  }).catch(() => {});
+}
+
+/* ---------- 資料 ---------- */
+async function loadData() {
+  const r = await ghGetJson(S.dataPath);
+  if (r.status === "not_found") return { reports: [], version: 0, sha: "" };
+  const reports = Array.isArray(r.json.reports) ? r.json.reports : [];
+  return { reports, version: r.json.version || 0, sha: r.sha };
+}
+async function loadProjects() {
+  try {
+    const r = await ghGetJson(S.cfg.projectPath);
+    if (r.status === "ok" && Array.isArray(r.json.projects)) {
+      S.projects = r.json.projects.map(p => ({ id: p.id || "", name: p.name || "" })).filter(p => p.name);
+    }
+  } catch (e) {}
+  renderProjectList();
+}
+function renderProjectList() {
+  const el = $("#projList");
+  if (el) el.innerHTML = S.projects.map(p => `<option value="${esc(p.name)}"></option>`).join("");
+}
+
+async function boot() {
+  S.cfg = loadCfg();
+  if (!S.cfg) {
+    openSetup(false);
+    return;
+  }
+  S.dataPath = S.cfg.dataPath;
+  setConnChip();
+  await refresh(true);
+  await loadProjects();
+}
+
+async function refresh(first) {
+  try {
+    const d = await loadData();
+    S.reports = d.reports.sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
+    S.lastSync = nowStr();
+    hideBanner();
+    buildMonthOptions();
+    renderList();
+    renderSummary();
+    if (first || !S.cur) {
+      if (S.reports.length) {
+        const today = todayStr();
+        selectReport((S.reports.find(r => r.date === today) || S.reports[0]).id, true);
+      } else {
+        newReport();
+      }
+    } else if (S.reports.length) {
+      const still = S.reports.find(r => r.id === S.cur.id);
+      if (!still) newReport();
+    } else {
+      newReport();
+    }
+  } catch (e) {
+    showBanner(`無法讀取資料：${e.message}`);
+    setConnChip("error");
+  }
+}
+
+function setConnChip(err) {
+  const chip = $("#connChip");
+  if (err === "error") { chip.textContent = "連線異常"; chip.classList.remove("ok"); return; }
+  if (!S.cfg) { chip.textContent = "未連線"; chip.classList.remove("ok"); return; }
+  chip.textContent = `${S.cfg.owner}/${S.cfg.repo}`;
+  chip.classList.add("ok");
+  chip.title = `資料檔：${S.dataPath}`;
+}
+function showBanner(msg) {
+  const b = $("#banner");
+  b.innerHTML = esc(msg) + ` <button class="btn sm" id="btnRetry" style="margin-left:8px;">重試</button>`;
+  b.classList.remove("hidden");
+  const r = $("#btnRetry");
+  if (r) r.addEventListener("click", () => refresh(true));
+}
+function hideBanner() { $("#banner").classList.add("hidden"); }
+
+/* ---------- 設定畫面 ---------- */
+function openSetup(closeable) {
+  const c = S.cfg;
+  $("#setOwner").value = c ? c.owner : "";
+  $("#setRepo").value = c ? c.repo : "";
+  $("#setBranch").value = c ? c.branch : "main";
+  $("#setDataPath").value = c ? c.dataPath : DEFAULT_DATA_PATH;
+  $("#setToken").value = c ? c.token : "";
+  $("#setupErr").textContent = "";
+  $("#btnSetupClose").style.display = closeable ? "inline-block" : "none";
+  $("#setupOverlay").classList.remove("hidden");
+}
+function readSetupForm() {
+  return normalizeCfg({
+    owner: $("#setOwner").value,
+    repo: $("#setRepo").value,
+    branch: $("#setBranch").value || "main",
+    token: $("#setToken").value,
+    dataPath: $("#setDataPath").value || DEFAULT_DATA_PATH,
+    projectPath: S.cfg ? S.cfg.projectPath : "project_data.json",
+  });
+}
+async function testConnection() {
+  const prev = S.cfg;
+  const cand = readSetupForm();
+  if (!cand) { $("#setupErr").textContent = "帳號、倉庫、Token 都要填"; return false; }
+  S.cfg = cand;
+  try {
+    const r = await ghGetJson(cand.dataPath);
+    $("#setupErr").textContent = r.status === "ok" ? "✓ 連線成功，資料檔存在" : "✓ 連線成功，資料檔會在第一次儲存時建立";
+    return true;
+  } catch (e) {
+    $("#setupErr").textContent = "✗ " + e.message;
+    return false;
+  } finally {
+    S.cfg = prev;
+  }
+}
+async function saveSetup() {
+  const cand = readSetupForm();
+  if (!cand) { $("#setupErr").textContent = "帳號、倉庫、Token 都要填"; return; }
+  S.cfg = cand;
+  try {
+    await ghGetJson(cand.dataPath);
+  } catch (e) { $("#setupErr").textContent = "✗ " + e.message; return; }
+  saveCfg(cand);
+  S.dataPath = cand.dataPath;
+  $("#setupOverlay").classList.add("hidden");
+  setConnChip();
+  await refresh(true);
+  await loadProjects();
+}
+function parseQuick() {
+  const raw = $("#setQuick").value.trim();
+  if (!raw) return;
+  try {
+    const payload = raw.startsWith("PMGH:") ? raw.slice(5) : raw;
+    const j = JSON.parse(b64ToUtf8(payload));
+    if (j.owner) $("#setOwner").value = j.owner;
+    if (j.repo) $("#setRepo").value = j.repo;
+    if (j.branch) $("#setBranch").value = j.branch;
+    if (j.token) $("#setToken").value = j.token;
+    $("#setupErr").textContent = "✓ 已填入連線碼內容";
+  } catch (e) {
+    $("#setupErr").textContent = "連線碼格式不正確";
+  }
+}
+
+/* ---------- 清單 ---------- */
+const monthOf = r => (r.date || "").slice(0, 7);
+function openDefects(r) {
+  return (r.defects || []).filter(d => d.status !== "複驗合格" && d.status !== "已結案" && (d.desc || "").trim()).length;
+}
+function workersTotal(r) {
+  return (r.workers || []).reduce((n, w) => n + (parseFloat(w.count) || 0), 0);
+}
+function photoBytes(r) {
+  return (r.photos || []).reduce((n, p) => n + (Number(p.bytes) || 0), 0);
+}
+function buildMonthOptions() {
+  const set = new Set(S.reports.map(monthOf).filter(Boolean));
+  const cur = $("#fMonth").value;
+  $("#fMonth").innerHTML = `<option value="">全部月份</option>` +
+    Array.from(set).sort().reverse().map(m => `<option value="${esc(m)}">${esc(m.replace("-", " 年 "))} 月</option>`).join("");
+  if (cur && set.has(cur)) $("#fMonth").value = cur;
+}
+function filteredReports() {
+  const q = $("#q").value.trim().toLowerCase();
+  const m = $("#fMonth").value;
+  return S.reports.filter(r => {
+    if (m && monthOf(r) !== m) return false;
+    if (!q) return true;
+    return [r.date, r.projectName, r.summary, r.reporter,
+      ...(r.defects || []).map(d => `${d.desc} ${d.note}`),
+      ...(r.items || []).map(i => i.name)].join(" ").toLowerCase().includes(q);
+  });
+}
+function renderList() {
+  const rows = filteredReports();
+  const curId = S.cur && S.cur.id;
+  $("#list").innerHTML = rows.length ? rows.map(r => {
+    const od = openDefects(r);
+    const wt = workersTotal(r);
+    return `<button class="rec ${r.id === curId ? "on" : ""}" data-id="${esc(r.id)}">
+      <div class="l1"><span class="date">${esc(r.date)}</span><span class="wk">${esc(weekdayOf(r.date))}</span></div>
+      <div class="l2">${esc(r.projectName || "（未指定專案）")} · ${esc(r.weather || "")}</div>
+      <div class="tags">
+        ${wt ? `<span class="tag">出工 ${wt} 人</span>` : ""}
+        ${(r.photos || []).length ? `<span class="tag">📷 ${(r.photos || []).length}（${fmtSize(photoBytes(r))}）</span>` : ""}
+        ${od ? `<span class="tag bad">缺失待改善 ${od}</span>` : `<span class="tag">無未結缺失</span>`}
+      </div>
+    </button>`;
+  }).join("") : `<div class="empty">沒有符合條件的日報</div>`;
+}
+function renderSummary() {
+  const m = $("#fMonth").value;
+  const rows = S.reports.filter(r => !m || monthOf(r) === m);
+  const wt = rows.reduce((n, r) => n + workersTotal(r), 0);
+  const od = rows.reduce((n, r) => n + openDefects(r), 0);
+  const ph = rows.reduce((n, r) => n + (r.photos || []).length, 0);
+  const bytes = rows.reduce((n, r) => n + photoBytes(r), 0);
+  $("#summary").innerHTML = `<span>日報 <b>${rows.length}</b></span><span>出工 <b>${wt}</b> 人日</span><span>未結缺失 <b>${od}</b></span><span>照片 <b>${ph}</b>（${fmtSize(bytes)}）</span>`;
+}
+
+/* ---------- 表單 ---------- */
+function blankReport() {
+  return {
+    id: "", date: todayStr(), projectId: "", projectName: "", weather: "晴", temp: "",
+    reporter: S.name || "", summary: "",
+    workers: [], machines: [], items: [], materials: [], inspections: [], defects: [], photos: [],
+    createdAt: "", updatedAt: "", createdBy: "", updatedBy: "",
+  };
+}
+function newReport() {
+  if (S.dirty && !confirm("目前日報尚未儲存，確定要新增嗎？")) return;
+  S.cur = blankReport();
+  S.dirty = false;
+  renderForm();
+  renderList();
+}
+function findReport(id) { return S.reports.find(r => r.id === id) || null; }
+function selectReport(id, silent) {
+  const r = findReport(id);
+  if (!r) return;
+  if (!silent && S.dirty && !confirm("目前日報尚未儲存，確定切換？")) return;
+  S.cur = deep(r);
+  S.dirty = false;
+  renderForm();
+  renderList();
+}
+function renderForm() {
+  const r = S.cur;
+  if (!r) return;
+  $("#empty").classList.add("hidden");
+  $("#form").classList.remove("hidden");
+  $("#fWeather").innerHTML = WEATHER.map(w => `<option value="${esc(w)}">${esc(w)}</option>`).join("");
+  $("#fDate").value = r.date || todayStr();
+  $("#fProject").value = r.projectName || "";
+  $("#fWeather").value = r.weather || WEATHER[0];
+  $("#fTemp").value = r.temp || "";
+  $("#fReporter").value = r.reporter || S.name || "";
+  $("#fSummary").value = r.summary || "";
+  $("#metaInfo").textContent = r.updatedAt
+    ? `更新 ${r.updatedAt}${r.createdAt && r.createdAt !== r.updatedAt ? " ・建立 " + r.createdAt : ""}`
+    : "尚未儲存";
+  ["workers", "machines", "items", "materials", "inspections", "defects"].forEach(renderTable);
+  renderPhotos();
+  updateWorkerSum();
+  updateDefectHint();
+  updateDirtyHint();
+  $("#btnDelete").disabled = !r.id;
+}
+function renderTable(section) {
+  const cols = SCHEMAS[section];
+  const rows = S.cur[section] || [];
+  const head = `<tr>${cols.map(c => `<th class="${c.w === "num" ? "th-num" : ""}">${esc(c.label)}</th>`).join("")}<th style="width:30px;"></th></tr>`;
+  const body = rows.map((row, i) => `<tr>${cols.map(c => `<td class="${c.w === "num" ? "td-num" : ""}">${cellHtml(section, c, row, i)}</td>`).join("")}<td><button class="x" type="button" data-del="${section}" data-i="${i}" title="刪除這列">✕</button></td></tr>`).join("");
+  const empty = rows.length ? "" : `<tr><td colspan="${cols.length + 1}" class="small" style="padding:8px;">尚無資料，按「＋ 一列」新增</td></tr>`;
+  $("#tbl" + section[0].toUpperCase() + section.slice(1)).innerHTML = head + body + empty;
+}
+function cellHtml(section, c, row, i) {
+  const val = row[c.k] || "";
+  const attrs = `data-section="${section}" data-i="${i}" data-k="${c.k}"`;
+  if (c.select) {
+    const list = c.select === "inspect" ? INSPECT : DEFECT_STATES;
+    return `<select ${attrs}>${list.map(v => `<option value="${esc(v)}" ${v === val ? "selected" : ""}>${esc(v)}</option>`).join("")}</select>`;
+  }
+  if (c.date) return `<input type="date" ${attrs} value="${esc(val)}">`;
+  return `<input type="text" ${attrs} value="${esc(val)}" placeholder="${esc(c.ph || "")}" ${c.w === "num" ? 'inputmode="decimal"' : ""}>`;
+}
+function updateWorkerSum() { $("#fWorkerSum").value = workersTotal(S.cur) + " 人"; }
+function updateDefectHint() {
+  const od = openDefects(S.cur);
+  $("#defectHint").textContent = od ? `未結 ${od} 件，建議設改善期限` : "全部已結案";
+}
+function updateDirtyHint() {
+  $("#dirtyHint").textContent = S.dirty ? "● 有未儲存的變更" : "";
+  $("#dirtyHint").style.color = "var(--warn)";
+}
+function markDirty() { S.dirty = true; updateDirtyHint(); }
+
+/* ---------- 照片（前端壓縮 → 獨立檔案上傳） ---------- */
+function loadBitmap(file) {
+  if (window.createImageBitmap) {
+    return createImageBitmap(file, { imageOrientation: "from-image" })
+      .catch(() => createImageBitmap(file).catch(() => loadImg(file)));
+  }
+  return loadImg(file);
+}
+function loadImg(file) {
+  return new Promise((res, rej) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => { URL.revokeObjectURL(url); res(img); };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      rej(new Error("無法讀取此圖片（HEIC 請改用手機「最相容」格式或轉成 JPEG）"));
+    };
+    img.src = url;
+  });
+}
+function canvasToBlob(canvas, type, q) {
+  return new Promise((res, rej) => {
+    try { canvas.toBlob(b => b ? res(b) : rej(new Error("圖片編碼失敗")), type, q); }
+    catch (e) { rej(e); }
+  });
+}
+async function compressImage(file, preset) {
+  const bmp = await loadBitmap(file);
+  const w0 = bmp.width || bmp.naturalWidth || 0;
+  const h0 = bmp.height || bmp.naturalHeight || 0;
+  if (!w0 || !h0) throw new Error("圖片尺寸讀取失敗");
+  const scale = Math.min(1, preset.edge / Math.max(w0, h0));
+  const w = Math.max(1, Math.round(w0 * scale));
+  const h = Math.max(1, Math.round(h0 * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("此瀏覽器不支援圖片壓縮");
+  ctx.drawImage(bmp, 0, 0, w, h);
+  if (bmp.close) bmp.close();
+  let q = preset.q;
+  let blob = await canvasToBlob(canvas, "image/jpeg", q);
+  let guard = 0;
+  while (blob.size > 380 * 1024 && q > 0.52 && guard < 3) {
+    q = Math.max(0.5, q - 0.12);
+    blob = await canvasToBlob(canvas, "image/jpeg", q);
+    guard++;
+  }
+  return { blob, w, h, quality: Math.round(q * 100) };
+}
+function setPhotoStatus(txt) { $("#photoStatus").textContent = txt || ""; }
+
+async function addFiles(files) {
+  if (!files || !files.length || !S.cur) return;
+  if (!S.cfg) { toast("請先設定 GitHub 連線"); return; }
+  if (S.busyPhotos) { toast("照片還在處理中"); return; }
+  S.busyPhotos = true;
+  const preset = PRESETS[S.preset] || PRESETS.normal;
+  let added = 0, before = 0, after = 0;
+  try {
+    for (let i = 0; i < files.length; i++) {
+      setPhotoStatus(`處理中 ${i + 1}/${files.length}…`);
+      try {
+        const c = await compressImage(files[i], preset);
+        const path = `reports/photos/${S.cur.date}/${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}.jpg`;
+        await ghPutBlob(path, c.blob, `Add photo ${path}`);
+        S.photoCache.set(path, URL.createObjectURL(c.blob));
+        S.cur.photos.push({ path, caption: "", w: c.w, h: c.h, bytes: c.blob.size });
+        added++; before += files[i].size || 0; after += c.blob.size;
+      } catch (e) {
+        toast(`第 ${i + 1} 張失敗：${e.message}`, 4200);
+      }
+    }
+  } finally {
+    S.busyPhotos = false;
+    setPhotoStatus("");
+  }
+  if (added) {
+    renderPhotos();
+    markDirty();
+    toast(`已加入 ${added} 張：${fmtSize(before)} → ${fmtSize(after)}（${PRESETS[S.preset].label}）`);
+    await save(true);
+  }
+}
+
+function photoUrl(path) { return S.photoCache.get(path) || ""; }
+function ensurePhoto(path) {
+  if (S.photoCache.has(path)) return Promise.resolve(S.photoCache.get(path));
+  if (S.photoPromises.has(path)) return S.photoPromises.get(path);
+  const pr = ghGetBlob(path).then(blob => {
+    const url = URL.createObjectURL(blob);
+    S.photoCache.set(path, url);
+    S.photoPromises.delete(path);
+    return url;
+  }).catch(e => {
+    S.photoPromises.delete(path);
+    throw e;
+  });
+  S.photoPromises.set(path, pr);
+  return pr;
+}
+function renderPhotos() {
+  const list = S.cur.photos || [];
+  const grid = $("#photoGrid");
+  grid.innerHTML = list.map((p, i) => {
+    const url = photoUrl(p.path);
+    return `<div class="ph">
+      ${url ? `<img class="ph-img" src="${esc(url)}" alt="${esc(p.caption || "")}">`
+            : `<div class="loading" data-need="${esc(p.path)}">載入中…</div>`}
+      <button class="del" type="button" data-photo-del="${i}" title="移除">✕</button>
+      <input class="cap" data-photo-cap="${i}" value="${esc(p.caption || "")}" placeholder="照片說明">
+      <div class="meta">${p.w && p.h ? p.w + "×" + p.h + " ・ " : ""}${fmtSize(p.bytes)}</div>
+    </div>`;
+  }).join("") || `<div class="small" style="padding:6px;">還沒有照片。拍照或選照片後會自動壓縮並上傳。</div>`;
+  const total = photoBytes(S.cur);
+  $("#photoTotal").textContent = list.length ? `${list.length} 張 · ${fmtSize(total)}` : "";
+  grid.querySelectorAll("[data-need]").forEach(el => {
+    const path = el.getAttribute("data-need");
+    ensurePhoto(path).then(url => {
+      const box = el.parentElement;
+      const img = document.createElement("img");
+      img.className = "ph-img";
+      img.src = url;
+      img.alt = "";
+      el.replaceWith(img);
+    }).catch(() => { el.textContent = "讀取失敗"; });
+  });
+}
+
+async function removePhoto(i) {
+  const p = S.cur.photos[i];
+  if (!p) return;
+  S.cur.photos.splice(i, 1);
+  markDirty();
+  renderPhotos();
+  toast("已移除照片");
+  ghDeleteFile(p.path, `Remove photo ${p.path}`);
+  await save(true);
+}
+
+/* ---------- 儲存 / 刪除 ---------- */
+function normalizeClient(r) {
+  const now = nowStr();
+  const id = /^[A-Za-z0-9_\-]{4,40}$/.test(r.id || "") ? r.id : `rep_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
+  const rows = (list, cols) => (Array.isArray(list) ? list : []).slice(0, 80).map(row => {
+    const o = {};
+    cols.forEach(c => { o[c] = String((row && row[c]) || "").slice(0, 300).trim(); });
+    return o;
+  }).filter(o => Object.values(o).some(Boolean));
+  return {
+    id,
+    date: String(r.date || "").slice(0, 10),
+    projectId: String(r.projectId || "").slice(0, 60),
+    projectName: String(r.projectName || "").slice(0, 120),
+    weather: WEATHER.includes(r.weather) ? r.weather : WEATHER[0],
+    temp: String(r.temp || "").slice(0, 20),
+    reporter: String(r.reporter || S.name || "").slice(0, 60),
+    summary: String(r.summary || "").slice(0, 2000),
+    workers: rows(r.workers, ["trade", "count"]),
+    machines: rows(r.machines, ["name", "count"]),
+    items: rows(r.items, ["name", "unit", "today", "total", "note"]),
+    materials: rows(r.materials, ["name", "qty", "note"]),
+    inspections: rows(r.inspections, ["name", "result", "note"]),
+    defects: rows(r.defects, ["desc", "dueDate", "status", "note"]),
+    photos: (Array.isArray(r.photos) ? r.photos : []).slice(0, 40).map(p => ({
+      path: String(p.path || "").slice(0, 200),
+      caption: String(p.caption || "").slice(0, 120),
+      w: Number(p.w) || 0,
+      h: Number(p.h) || 0,
+      bytes: Number(p.bytes) || 0,
+    })).filter(p => p.path),
+    createdAt: String(r.createdAt || "").slice(0, 30) || now,
+    updatedAt: now,
+    createdBy: String(r.createdBy || S.name || "").slice(0, 60),
+    updatedBy: S.name || "",
+  };
+}
+
+async function save(auto) {
+  if (!S.cur || S.saving) return false;
+  if (!S.cfg) { openSetup(false); return false; }
+  if (!S.cur.date) { toast("請先填日期"); return false; }
+  if (!S.cur.projectName.trim()) { toast("請先填專案名稱"); return false; }
+  const wasNew = !S.cur.id;
+  const rec = normalizeClient(S.cur);
+  if (rec.reporter) localStorage.setItem(NAME_KEY, rec.reporter);
+  S.name = rec.reporter || S.name;
+  S.saving = true;
+  $("#btnSave").disabled = $("#btnSave2").disabled = true;
+  try {
+    const attempt = async () => {
+      const d = await loadData();
+      const json = { schemaVersion: 1, version: (d.version || 0) + 1, reports: d.reports.slice() };
+      const i = json.reports.findIndex(x => x.id === rec.id);
+      if (i >= 0) json.reports[i] = rec; else json.reports.push(rec);
+      return ghPutJson(S.dataPath, json, d.sha, `Report ${rec.date} ${rec.id}`);
+    };
+    let res = await attempt();
+    if (res.status === "conflict") res = await attempt();
+    if (res.status !== "ok") throw new Error("儲存衝突，請再按一次儲存");
+    S.cur = deep(rec);
+    S.dirty = false;
+    await refresh(false);
+    renderForm();
+    if (!auto) toast(wasNew ? "已新增日報" : "已儲存");
+    return true;
+  } catch (e) {
+    showBanner(`儲存失敗：${e.message}（資料還在畫面上，可重試）`);
+    toast("儲存失敗：" + e.message, 4200);
+    return false;
+  } finally {
+    S.saving = false;
+    $("#btnSave").disabled = $("#btnSave2").disabled = false;
+  }
+}
+
+async function removeReport() {
+  if (!S.cur || !S.cur.id) return;
+  if (!confirm(`確定刪除 ${S.cur.date} 的日報？照片檔案會留在 repo，可另外清理。`)) return;
+  S.saving = true;
+  try {
+    const d = await loadData();
+    const json = { schemaVersion: 1, version: (d.version || 0) + 1, reports: d.reports.filter(r => r.id !== S.cur.id) };
+    const res = await ghPutJson(S.dataPath, json, d.sha, `Delete report ${S.cur.id}`);
+    if (res.status !== "ok") throw new Error("刪除衝突，請重試");
+    S.dirty = false;
+    await refresh(true);
+    toast("已刪除");
+  } catch (e) {
+    toast("刪除失敗：" + e.message, 4000);
+  } finally {
+    S.saving = false;
+  }
+}
+
+function copyPrevious() {
+  const others = S.reports.filter(r => r.id !== (S.cur.id || ""));
+  const same = others.find(r => r.projectName === S.cur.projectName) || others[0];
+  if (!same) { toast("還沒有其他日報可沿用"); return; }
+  S.cur.workers = deep(same.workers || []);
+  S.cur.machines = deep(same.machines || []);
+  S.cur.items = deep((same.items || []).map(it => Object.assign({}, it, { today: "", note: "" })));
+  S.cur.materials = deep(same.materials || []);
+  ["workers", "machines", "items", "materials"].forEach(renderTable);
+  updateWorkerSum();
+  markDirty();
+  toast(`已沿用 ${same.date} 的人力/機具/工項`);
+}
+
+/* ---------- 列印 ---------- */
+function buildPrintHtml(r) {
+  const tbl = (title, cols, rows) => {
+    if (!rows || !rows.length) return "";
+    return `<h2>${esc(title)}</h2><table><thead><tr>${cols.map(c => `<th>${esc(c.label)}</th>`).join("")}</tr></thead><tbody>${
+      rows.map(row => `<tr>${cols.map(c => `<td>${esc(row[c.k] || "")}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+  };
+  const photos = (r.photos || []).length
+    ? `<h2>現場照片</h2><div class="ph3">${r.photos.map(p => `<figure><img src="${esc(photoUrl(p.path))}" alt=""><figcaption>${esc(p.caption || p.path)}</figcaption></figure>`).join("")}</div>`
+    : "";
+  const od = openDefects(r);
+  return `<h1>施工監理日報</h1>
+    <div class="meta">列印時間 ${esc(new Date().toLocaleString("zh-TW", { hour12: false }))}${od ? ` ・未結缺失 ${od} 件` : ""}</div>
+    <table>
+      <tr><th style="width:18%">日期</th><td style="width:32%">${esc(r.date)}（${esc(weekdayOf(r.date))}）</td><th style="width:18%">天候</th><td>${esc(r.weather || "")} ${esc(r.temp || "")}</td></tr>
+      <tr><th>專案</th><td colspan="3">${esc(r.projectName || "")}</td></tr>
+      <tr><th>出工合計</th><td>${workersTotal(r)} 人</td><th>填寫人</th><td>${esc(r.reporter || "")}</td></tr>
+    </table>
+    ${tbl("出工人力", SCHEMAS.workers, r.workers)}
+    ${tbl("使用機具", SCHEMAS.machines, r.machines)}
+    ${tbl("工項與數量", SCHEMAS.items, r.items)}
+    ${tbl("材料進場", SCHEMAS.materials, r.materials)}
+    ${tbl("查驗紀錄", SCHEMAS.inspections, r.inspections)}
+    ${tbl("缺失改善", SCHEMAS.defects, r.defects)}
+    ${r.summary ? `<h2>摘要與其他事項</h2><div style="white-space:pre-wrap;border:1px solid #555;padding:2mm;font-size:9.5pt;">${esc(r.summary)}</div>` : ""}
+    ${photos}
+    <div class="sign"><div>填寫人：${esc(r.reporter || "")}</div><div>工地主任：</div><div>監造單位：</div></div>`;
+}
+async function printReport() {
+  if (!S.cur) { toast("沒有可列印的日報"); return; }
+  await Promise.all((S.cur.photos || []).map(p => ensurePhoto(p.path).catch(() => null)));
+  $("#printArea").innerHTML = buildPrintHtml(S.cur);
+  const imgs = Array.from($("#printArea").querySelectorAll("img"));
+  await Promise.all(imgs.map(img => img.complete ? Promise.resolve() : new Promise(res => {
+    img.onload = img.onerror = res;
+    setTimeout(res, 1500);
+  })));
+  window.print();
+}
+
+/* ---------- 事件 ---------- */
+function bind() {
+  $("#btnSave").addEventListener("click", () => save(false));
+  $("#btnSave2").addEventListener("click", () => save(false));
+  $("#btnPrint").addEventListener("click", printReport);
+  $("#btnNew").addEventListener("click", newReport);
+  $("#btnDelete").addEventListener("click", removeReport);
+  $("#btnCopyPrev").addEventListener("click", copyPrevious);
+  $("#btnSettings").addEventListener("click", () => openSetup(true));
+
+  $("#setupOverlay").addEventListener("click", e => {
+    if (e.target.id === "setupOverlay" && S.cfg) $("#setupOverlay").classList.add("hidden");
+  });
+  $("#btnSetupClose").addEventListener("click", () => $("#setupOverlay").classList.add("hidden"));
+  $("#btnSetupSave").addEventListener("click", saveSetup);
+  $("#btnSetupTest").addEventListener("click", testConnection);
+  $("#setQuick").addEventListener("change", parseQuick);
+  $("#setQuick").addEventListener("paste", () => setTimeout(parseQuick, 50));
+
+  $("#q").addEventListener("input", renderList);
+  $("#fMonth").addEventListener("change", () => { renderList(); renderSummary(); });
+  $("#list").addEventListener("click", e => {
+    const b = e.target.closest(".rec");
+    if (b) selectReport(b.dataset.id);
+  });
+
+  $("#fDate").addEventListener("change", e => { S.cur.date = e.target.value; markDirty(); renderList(); });
+  $("#fProject").addEventListener("input", e => { S.cur.projectName = e.target.value; markDirty(); });
+  $("#fWeather").addEventListener("change", e => { S.cur.weather = e.target.value; markDirty(); });
+  $("#fTemp").addEventListener("input", e => { S.cur.temp = e.target.value; markDirty(); });
+  $("#fReporter").addEventListener("input", e => {
+    S.cur.reporter = e.target.value;
+    S.name = e.target.value;
+    localStorage.setItem(NAME_KEY, S.name);
+    markDirty();
+  });
+  $("#fSummary").addEventListener("input", e => { S.cur.summary = e.target.value; markDirty(); });
+
+  $("#form").addEventListener("input", e => {
+    const t = e.target;
+    if (t.dataset && t.dataset.k) {
+      S.cur[t.dataset.section][Number(t.dataset.i)][t.dataset.k] = t.value;
+      markDirty();
+      if (t.dataset.section === "workers") updateWorkerSum();
+      if (t.dataset.section === "defects") updateDefectHint();
+    }
+    if (t.dataset && t.dataset.photoCap !== undefined) {
+      S.cur.photos[Number(t.dataset.photoCap)].caption = t.value;
+      markDirty();
+    }
+  });
+
+  document.addEventListener("click", e => {
+    const add = e.target.closest("[data-add]");
+    if (add) {
+      const sec = add.dataset.add;
+      const row = {};
+      SCHEMAS[sec].forEach(c => { row[c.k] = c.select ? (c.select === "inspect" ? INSPECT[0] : DEFECT_STATES[0]) : ""; });
+      S.cur[sec].push(row);
+      markDirty();
+      renderTable(sec);
+      if (sec === "workers") updateWorkerSum();
+      if (sec === "defects") updateDefectHint();
+      return;
+    }
+    const del = e.target.closest("[data-del]");
+    if (del) {
+      const sec = del.dataset.del;
+      S.cur[sec].splice(Number(del.dataset.i), 1);
+      markDirty();
+      renderTable(sec);
+      if (sec === "workers") updateWorkerSum();
+      if (sec === "defects") updateDefectHint();
+      return;
+    }
+    const pd = e.target.closest("[data-photo-del]");
+    if (pd) { removePhoto(Number(pd.dataset.photoDel)); return; }
+  });
+
+  $("#btnCamera").addEventListener("click", () => $("#fileCamera").click());
+  $("#btnPickFiles").addEventListener("click", () => $("#filePick").click());
+  $("#fileCamera").addEventListener("change", async e => {
+    const f = e.target.files; e.target.value = "";
+    await addFiles(f);
+  });
+  $("#filePick").addEventListener("change", async e => {
+    const f = Array.from(e.target.files || []); e.target.value = "";
+    await addFiles(f);
+  });
+  $("#photoPreset").value = S.preset;
+  $("#photoPreset").addEventListener("change", e => {
+    S.preset = e.target.value;
+    localStorage.setItem(PRESET_KEY, S.preset);
+  });
+
+  document.addEventListener("keydown", e => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { e.preventDefault(); save(false); }
+  });
+  window.addEventListener("beforeunload", e => {
+    if (S.dirty) { e.preventDefault(); e.returnValue = ""; }
+  });
+}
+
+bind();
+boot();
+</script>
+</body>
+</html>
