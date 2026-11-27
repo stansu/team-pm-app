@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+(function(){try{var s=localStorage.getItem("pm_theme");if(s!=="dark"&&s!=="light"){s=(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)?"dark":"light";}if(s==="dark"){document.documentElement.setAttribute("data-theme","dark");}}catch(e){}})();
+</script>
+<title>施工監理日報</title>
+<style>
+:root{
+  --bg:#f4f6fa; --panel:#ffffff; --panel2:#f8fafc; --line:#dfe5ee; --text:#16233a;
+  --muted:#64748b; --accent:#2563eb; --accent-ink:#fff; --good:#0f766e; --warn:#b45309;
+  --bad:#b91c1c; --chip:#eef2f9; --shadow:0 1px 2px rgba(15,23,42,.06),0 8px 24px rgba(15,23,42,.06);
+  --radius:12px;
+}
+html[data-theme="dark"]{
+  --bg:#0d1420; --panel:#141d2b; --panel2:#101827; --line:#243044; --text:#e6edf7;
+  --muted:#93a4bd; --accent:#3b82f6; --accent-ink:#fff; --good:#2dd4bf; --warn:#fbbf24;
+  --bad:#f87171; --chip:#1b2637; --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 26px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.55 -apple-system,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;}
+h1,h2,h3{margin:0;}
+button,input,select,textarea{font:inherit;color:inherit;}
+.hidden{display:none !important;}
+.topbar{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+  padding:10px 14px;background:var(--panel);border-bottom:1px solid var(--line);box-shadow:var(--shadow);}
+.brand{font-size:15.5px;font-weight:800;letter-spacing:.2px;}
+.brand small{font-weight:600;color:var(--muted);font-size:11.5px;margin-left:6px;}
+.top-actions{margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.chip{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12px;color:var(--muted);}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:9px;padding:6px 12px;cursor:pointer;font-size:13px;}
+.btn:hover{border-color:var(--accent);}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700;}
+.btn.sm{padding:4px 9px;font-size:12px;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+a.btn{text-decoration:none;}
+.banner{padding:8px 14px;background:#fff7ed;color:#9a3412;font-size:12.5px;border-bottom:1px solid #fed7aa;}
+html[data-theme="dark"] .banner{background:#2a1c10;color:#fbbf24;border-color:#4a2f14;}
+.layout{display:grid;grid-template-columns:320px minmax(0,1fr);gap:12px;padding:12px;align-items:start;}
+@media (max-width:900px){ .layout{grid-template-columns:1fr;} }
+.list-pane,.form-pane{min-width:0;}
+.list-pane{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+.pane-head{padding:10px;display:grid;gap:8px;border-bottom:1px solid var(--line);}
+.pane-head .row{display:flex;gap:6px;}
+input,select,textarea{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:6px 8px;width:100%;min-width:0;}
+input:focus,select:focus,textarea:focus{outline:2px solid color-mix(in srgb,var(--accent) 35%,transparent);border-color:var(--accent);}
+.pane-head .row .btn{white-space:nowrap;}
+.summary{display:flex;gap:6px;flex-wrap:wrap;padding:8px 10px;border-bottom:1px solid var(--line);font-size:12px;color:var(--muted);}
+.summary b{color:var(--text);}
+.list{max-height:calc(100vh - 210px);overflow:auto;}
+@media (max-width:900px){ .list{max-height:44vh;} }
+.rec{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:9px 11px;cursor:pointer;}
+.rec:hover{background:var(--panel2);}
+.rec.on{background:color-mix(in srgb,var(--accent) 10%,var(--panel));box-shadow:inset 3px 0 0 var(--accent);}
+.rec .l1{display:flex;gap:6px;align-items:baseline;font-weight:700;font-size:13px;}
+.rec .l1 span.date{font-variant-numeric:tabular-nums;}
+.rec .l1 .wk{color:var(--muted);font-weight:500;font-size:11.5px;}
+.rec .l2{color:var(--muted);font-size:12px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.rec .tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;}
+.tag{font-size:11px;padding:1px 6px;border-radius:999px;background:var(--chip);color:var(--muted);border:1px solid var(--line);}
+.tag.bad{background:#fee2e2;color:#991b1b;border-color:#fecaca;}
+html[data-theme="dark"] .tag.bad{background:#3a1414;color:#fca5a5;border-color:#5b2020;}
+.tag.warn{background:#fef3c7;color:#92400e;border-color:#fde68a;}
+html[data-theme="dark"] .tag.warn{background:#33240a;color:#fcd34d;border-color:#4d370f;}
+.empty{padding:40px 20px;text-align:center;color:var(--muted);}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px;margin-bottom:12px;}
+.card-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+.card-head h2{font-size:13.5px;letter-spacing:.3px;}
+.card-head .hint{margin-left:auto;font-size:11.5px;color:var(--muted);}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;}
+@media (max-width:700px){ .grid3{grid-template-columns:repeat(2,minmax(0,1fr));} }
+label.f{display:grid;gap:3px;font-size:12px;color:var(--muted);}
+label.f input,label.f select{color:var(--text);}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media (max-width:820px){ .two-col{grid-template-columns:1fr;} }
+.subhead{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;margin:2px 0 6px;color:var(--text);}
+.subhead .btn{margin-left:auto;}
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:9px;}
+table.grid{width:100%;border-collapse:collapse;font-size:12.5px;}
+table.grid th{background:var(--panel2);text-align:left;font-weight:700;color:var(--muted);font-size:11.5px;padding:5px 6px;border-bottom:1px solid var(--line);white-space:nowrap;}
+table.grid td{padding:3px 4px;border-bottom:1px solid var(--line);vertical-align:middle;}
+table.grid tr:last-child td{border-bottom:0;}
+table.grid input,table.grid select{padding:4px 6px;border-radius:6px;font-size:12.5px;background:transparent;border-color:transparent;}
+table.grid input:hover,table.grid select:hover{border-color:var(--line);}
+table.grid th.th-num,table.grid td.td-num{width:70px;}
+.x{border:0;background:none;color:var(--muted);cursor:pointer;padding:2px 5px;border-radius:6px;font-size:12px;}
+.x:hover{color:var(--bad);background:var(--chip);}
+.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;}
+.ph{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel2);position:relative;}
+.ph img{display:block;width:100%;height:110px;object-fit:cover;background:#00000010;}
+.ph .cap{border:0;border-top:1px solid var(--line);border-radius:0;font-size:11.5px;padding:4px 6px;background:var(--panel);}
+.ph .del{position:absolute;top:4px;right:4px;background:#000000a8;color:#fff;border:0;border-radius:6px;width:22px;height:22px;cursor:pointer;font-size:12px;}
+.ph-add{display:grid;place-items:center;min-height:150px;border:1.5px dashed var(--line);border-radius:10px;color:var(--muted);cursor:pointer;background:none;font-size:12.5px;}
+.ph-add:hover{border-color:var(--accent);color:var(--accent);}
+textarea#fSummary{min-height:74px;resize:vertical;}
+.form-foot{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px;}
+.form-foot .spacer{margin-left:auto;}
+.small{font-size:11.5px;color:var(--muted);}
+.overlay{position:fixed;inset:0;z-index:60;background:#0b1220cc;display:grid;place-items:center;padding:14px;}
+.overlay .box{background:var(--panel);border-radius:14px;box-shadow:var(--shadow);width:min(560px,100%);max-height:88vh;overflow:auto;padding:16px;}
+.overlay .box h3{font-size:15px;margin-bottom:10px;}
+.lock-card{width:min(360px,100%);background:var(--panel);border-radius:14px;padding:20px;text-align:center;box-shadow:var(--shadow);}
+.lock-card .big{font-size:30px;margin-bottom:6px;}
+.lock-card input{text-align:center;margin:10px 0;font-size:16px;letter-spacing:3px;}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#111827;color:#fff;padding:8px 14px;border-radius:10px;font-size:13px;z-index:90;box-shadow:var(--shadow);}
+.crumb{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--muted);margin-bottom:8px;flex-wrap:wrap;}
+.crumb b{color:var(--text);}
+.picker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;max-height:52vh;overflow:auto;}
+.pick{border:1px solid var(--line);border-radius:9px;background:var(--panel2);cursor:pointer;padding:0;overflow:hidden;text-align:left;}
+.pick img{width:100%;height:84px;object-fit:cover;display:block;background:#00000010;}
+.pick .nm{font-size:11px;padding:4px 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pick.dir{display:flex;align-items:center;gap:6px;padding:10px 8px;font-size:12.5px;}
+.pick:hover{border-color:var(--accent);}
+.print-area{display:none;}
+@media print{
+  @page{size:A4;margin:13mm;}
+  body{background:#fff;color:#000;font-size:10.5pt;}
+  body>*:not(.print-area){display:none !important;}
+  .print-area{display:block !important;}
+  .print-area h1{font-size:16pt;text-align:center;margin:0 0 2mm;letter-spacing:1px;}
+  .print-area .meta{font-size:9pt;text-align:center;color:#444;margin-bottom:4mm;}
+  .print-area table{width:100%;border-collapse:collapse;margin-bottom:3mm;}
+  .print-area th,.print-area td{border:1px solid #555;padding:1.6mm 2mm;font-size:9.5pt;vertical-align:top;}
+  .print-area th{background:#f1f3f7;text-align:left;}
+  .print-area h2{font-size:10.5pt;margin:4mm 0 1.5mm;border-left:3px solid #333;padding-left:2mm;}
+  .print-area .ph3{display:flex;flex-wrap:wrap;gap:3mm;}
+  .print-area .ph3 figure{margin:0;width:31%;}
+  .print-area .ph3 img{width:100%;height:38mm;object-fit:cover;border:1px solid #999;}
+  .print-area .ph3 figcaption{font-size:8.5pt;color:#333;padding-top:.6mm;}
+  .print-area .sign{display:flex;gap:8mm;margin-top:8mm;font-size:9.5pt;}
+  .print-area .sign div{flex:1;border-top:1px solid #333;padding-top:1.5mm;}
+}
+</style>
+</head>
+<body>
+
+<div id="lockOverlay" class="overlay hidden">
+  <div class="lock-card">
+    <div class="big">🔒</div>
+    <h3>需要觀看密碼</h3>
+    <p class="small">與排程頁相同的觀看密碼</p>
+    <input id="lockPass" type="password" placeholder="請輸入觀看密碼" autocomplete="off">
+    <button class="btn primary" id="btnUnlock" style="width:100%;">解鎖</button>
+    <p class="small" id="lockErr" style="color:var(--bad);margin:8px 0 0;"></p>
+  </div>
+</div>
+
+<header class="topbar">
+  <div class="brand">📋 施工監理日報<small>獨立模組 · 資料存 report_data.json</small></div>
+  <div class="top-actions">
+    <span class="chip" id="meChip">未登入</span>
+    <a class="btn" href="/">← 排程</a>
+    <button class="btn" id="btnPrint">列印</button>
+    <button class="btn primary" id="btnSave">儲存</button>
+  </div>
+</header>
+<div id="banner" class="banner hidden"></div>
+
+<div id="envNotice" class="hidden" style="padding:8px 14px;background:#fff7ed;color:#9a3412;font-size:12.5px;border-bottom:1px solid #fed7aa;"></div>
+
+<main class="layout">
+  <aside class="list-pane">
+    <div class="pane-head">
+      <input id="q" placeholder="搜尋專案、備註、缺失…">
+      <div class="row">
+        <select id="fMonth"><option value="">全部月份</option></select>
+        <button class="btn primary" id="btnNew">＋ 新日報</button>
+      </div>
+    </div>
+    <div class="summary" id="summary"></div>
+    <div class="list" id="list"></div>
+  </aside>
+
+  <section class="form-pane">
+    <div id="empty" class="empty">左邊選一份日報，或按「＋ 新日報」開始記錄。</div>
+    <div id="form" class="hidden">
+      <div class="card">
+        <div class="card-head">
+          <h2>表頭</h2>
+          <button class="btn sm" id="btnCopyPrev" type="button" title="複製最近一份日報的人力、機具、工項">沿用上一份</button>
+          <span class="hint" id="dirtyHint"></span>
+        </div>
+        <div class="grid3">
+          <label class="f">日期<input type="date" id="fDate"></label>
+          <label class="f">專案<select id="fProject"></select></label>
+          <label class="f">天候<select id="fWeather"></select></label>
+          <label class="f">氣溫<input id="fTemp" placeholder="例如 24–30℃"></label>
+          <label class="f">填寫人<input id="fReporter" readonly></label>
+          <label class="f">出工合計<input id="fWorkerSum" readonly></label>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>出工與機具</h2><span class="hint">人力算人日，機具算台班</span></div>
+        <div class="two-col">
+          <div>
+            <div class="subhead">人力<button class="btn sm" type="button" data-add="workers">＋ 一列</button></div>
+            <div class="table-wrap"><table class="grid" id="tblWorkers"></table></div>
+          </div>
+          <div>
+            <div class="subhead">機具<button class="btn sm" type="button" data-add="machines">＋ 一列</button></div>
+            <div class="table-wrap"><table class="grid" id="tblMachines"></table></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>工項與數量</h2><span class="hint">今日完成量與累計</span></div>
+        <div class="subhead">工項<button class="btn sm" type="button" data-add="items">＋ 一列</button></div>
+        <div class="table-wrap"><table class="grid" id="tblItems"></table></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>材料進場</h2></div>
+        <div class="subhead">材料<button class="btn sm" type="button" data-add="materials">＋ 一列</button></div>
+        <div class="table-wrap"><table class="grid" id="tblMaterials"></table></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>查驗紀錄</h2><span class="hint">不合格請在缺失開單追蹤</span></div>
+        <div class="subhead">查驗<button class="btn sm" type="button" data-add="inspections">＋ 一列</button></div>
+        <div class="table-wrap"><table class="grid" id="tblInspections"></table></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>缺失改善</h2><span class="hint" id="defectHint"></span></div>
+        <div class="subhead">缺失<button class="btn sm" type="button" data-add="defects">＋ 一列</button></div>
+        <div class="table-wrap"><table class="grid" id="tblDefects"></table></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>現場照片</h2><span class="hint">從共用資料夾挑選，不需上傳</span></div>
+        <div class="photo-grid" id="photoGrid"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>摘要與其他事項</h2></div>
+        <textarea id="fSummary" placeholder="今日概況、指示事項、待處理問題…"></textarea>
+        <div class="form-foot">
+          <span class="small" id="metaInfo"></span>
+          <span class="spacer"></span>
+          <button class="btn" id="btnDelete" type="button">刪除此日報</button>
+          <button class="btn primary" id="btnSave2" type="button">儲存</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="photoModal" class="overlay hidden">
+  <div class="box">
+    <div class="card-head">
+      <h3>挑選照片</h3>
+      <span class="hint" id="pickCount"></span>
+      <button class="btn sm" id="btnPickDone" style="margin-left:auto;">完成</button>
+    </div>
+    <div class="crumb" id="crumb"></div>
+    <div style="display:flex;gap:6px;margin-bottom:8px;">
+      <select id="pickRoot" style="flex:1;"></select>
+      <button class="btn sm" id="btnPickUp" type="button">↑ 上一層</button>
+    </div>
+    <div class="picker-grid" id="pickerGrid"></div>
+  </div>
+</div>
+
+<div id="printArea" class="print-area"></div>
+<div id="toast" class="toast hidden"></div>
+
+<script>
+"use strict";
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => Array.from(el.querySelectorAll(s));
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+const S = {
+  vtoken: sessionStorage.getItem("pm_lan_view_token") || "",
+  token: localStorage.getItem("pm_lan_token") || "",
+  me: null, canWrite: false,
+  reports: [], projects: [], members: [], roots: [],
+  weatherOptions: ["晴", "多雲", "陰", "雨", "豪雨", "颱風"],
+  inspectOptions: ["合格", "不合格", "待驗", "不適用"],
+  defectOptions: ["待改善", "已改善", "複驗合格", "已結案"],
+  cur: null, dirty: false, saving: false,
+  picker: { root: "", path: "" },
+};
+
+const SCHEMAS = {
+  workers: [
+    { k: "trade", label: "工種", ph: "模板工", w: "" },
+    { k: "count", label: "人數", ph: "4", w: "num" },
+  ],
+  machines: [
+    { k: "name", label: "機具名稱", ph: "挖土機", w: "" },
+    { k: "count", label: "數量", ph: "1", w: "num" },
+  ],
+  items: [
+    { k: "name", label: "工項", ph: "1F 樑鋼筋綁紮", w: "" },
+    { k: "unit", label: "單位", ph: "式", w: "num" },
+    { k: "today", label: "今日", ph: "0", w: "num" },
+    { k: "total", label: "累計", ph: "0", w: "num" },
+    { k: "note", label: "備註", ph: "", w: "" },
+  ],
+  materials: [
+    { k: "name", label: "材料", ph: "#5 鋼筋", w: "" },
+    { k: "qty", label: "數量", ph: "2.5 t", w: "num" },
+    { k: "note", label: "備註", ph: "", w: "" },
+  ],
+  inspections: [
+    { k: "name", label: "查驗項目", ph: "鋼筋間距", w: "" },
+    { k: "result", label: "結果", select: "inspect", w: "num" },
+    { k: "note", label: "備註", ph: "", w: "" },
+  ],
+  defects: [
+    { k: "desc", label: "缺失內容", ph: "保護層不足", w: "" },
+    { k: "dueDate", label: "改善期限", date: true, w: "num" },
+    { k: "status", label: "狀態", select: "defect", w: "num" },
+    { k: "note", label: "備註", ph: "", w: "" },
+  ],
+};
+
+function todayStr() {
+  const d = new Date();
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+function weekdayOf(dateStr) {
+  const d = new Date(`${dateStr}T12:00:00`);
+  return Number.isNaN(d.getTime()) ? "" : "週" + "日一二三四五六"[d.getDay()];
+}
+function toast(msg, ms = 2200) {
+  const t = $("#toast");
+  t.textContent = msg;
+  t.classList.remove("hidden");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => t.classList.add("hidden"), ms);
+}
+function deep(obj) { return JSON.parse(JSON.stringify(obj)); }
+
+async function api(path, opts = {}) {
+  const headers = Object.assign({ "Content-Type": "application/json" }, opts.headers || {});
+  if (S.token) headers["X-Auth-Token"] = S.token;
+  if (S.vtoken) headers["X-View-Token"] = S.vtoken;
+  const res = await fetch(path, Object.assign({}, opts, { headers }));
+  let body = null;
+  try { body = await res.json(); } catch (e) { body = null; }
+  if (res.status === 401 && body && body.requireViewPass) {
+    showLock();
+    throw new Error("locked");
+  }
+  if (!res.ok) throw new Error((body && body.error) || `請求失敗（${res.status}）`);
+  return body;
+}
+
+/* ---------- 載入 ---------- */
+async function load() {
+  let j;
+  try {
+    j = await api("/api/reports");
+  } catch (e) {
+    if (e.message === "locked") return;
+    toast(e.message, 4000);
+    return;
+  }
+  S.reports = j.reports || [];
+  S.projects = j.projects || [];
+  S.members = j.members || [];
+  S.roots = (j.sharedRoots || []).filter(r => r.available);
+  S.me = j.me || null;
+  S.canWrite = !!j.canWrite;
+  if (j.weatherOptions) S.weatherOptions = j.weatherOptions;
+  if (j.inspectOptions) S.inspectOptions = j.inspectOptions;
+  if (j.defectOptions) S.defectOptions = j.defectOptions;
+
+  $("#meChip").textContent = S.me ? `${S.me.name}｜${roleLabel(S.me.role)}` : "未登入";
+  const banner = $("#banner");
+  if (!S.me) {
+    banner.classList.remove("hidden");
+    banner.innerHTML = `尚未登入，只能瀏覽日報。請回 <a href="/">排程頁</a> 右上角登入後再填寫（日報需要記錄填寫人）。`;
+  } else if (!S.canWrite) {
+    banner.classList.remove("hidden");
+    banner.textContent = "你的身分是「唯讀檢視」，可以看日報但不能新增或修改。";
+  } else {
+    banner.classList.add("hidden");
+  }
+
+  buildMonthOptions();
+  renderList();
+  renderSummary();
+
+  if (S.reports.length) {
+    const today = todayStr();
+    const pick = S.reports.find(r => r.date === today) || S.reports[0];
+    selectReport(pick.id, true);
+  } else {
+    newReport();
+  }
+}
+
+function roleLabel(r) {
+  return { sysadmin: "系統管理員", pm: "專案管理員", member: "成員", viewer: "唯讀" }[r] || r || "";
+}
+
+/* ---------- 清單 ---------- */
+function monthOf(r) { return (r.date || "").slice(0, 7); }
+function openDefects(r) {
+  return (r.defects || []).filter(d => d.status !== "複驗合格" && d.status !== "已結案" && (d.desc || "").trim()).length;
+}
+function workersTotal(r) {
+  return (r.workers || []).reduce((n, w) => n + (parseFloat(w.count) || 0), 0);
+}
+
+function buildMonthOptions() {
+  const set = new Set(S.reports.map(monthOf).filter(Boolean));
+  const cur = $("#fMonth").value;
+  $("#fMonth").innerHTML = `<option value="">全部月份</option>` +
+    Array.from(set).sort().reverse().map(m => `<option value="${esc(m)}">${esc(m.replace("-", " 年 "))} 月</option>`).join("");
+  if (cur && set.has(cur)) $("#fMonth").value = cur;
+}
+
+function filteredReports() {
+  const q = $("#q").value.trim().toLowerCase();
+  const m = $("#fMonth").value;
+  return S.reports.filter(r => {
+    if (m && monthOf(r) !== m) return false;
+    if (!q) return true;
+    const hay = [r.date, r.projectName, r.summary, r.reporter,
+      ...(r.defects || []).map(d => `${d.desc} ${d.note}`),
+      ...(r.items || []).map(i => i.name)].join(" ").toLowerCase();
+    return hay.includes(q);
+  });
+}
+
+function renderList() {
+  const rows = filteredReports();
+  const curId = S.cur && S.cur.id;
+  $("#list").innerHTML = rows.length ? rows.map(r => {
+    const od = openDefects(r);
+    const wt = workersTotal(r);
+    return `<button class="rec ${r.id === curId ? "on" : ""}" data-id="${esc(r.id)}">
+      <div class="l1"><span class="date">${esc(r.date)}</span><span class="wk">${esc(weekdayOf(r.date))}</span></div>
+      <div class="l2">${esc(r.projectName || "（未指定專案）")} · ${esc(r.weather || "")}</div>
+      <div class="tags">
+        ${wt ? `<span class="tag">出工 ${wt} 人</span>` : ""}
+        ${(r.photos || []).length ? `<span class="tag">📷 ${(r.photos || []).length}</span>` : ""}
+        ${od ? `<span class="tag bad">缺失待改善 ${od}</span>` : `<span class="tag">無未結缺失</span>`}
+      </div>
+    </button>`;
+  }).join("") : `<div class="empty">沒有符合條件的日報</div>`;
+}
+
+function renderSummary() {
+  const m = $("#fMonth").value;
+  const rows = S.reports.filter(r => !m || monthOf(r) === m);
+  const wt = rows.reduce((n, r) => n + workersTotal(r), 0);
+  const od = rows.reduce((n, r) => n + openDefects(r), 0);
+  const ph = rows.reduce((n, r) => n + (r.photos || []).length, 0);
+  $("#summary").innerHTML = `<span>日報 <b>${rows.length}</b> 份</span><span>出工 <b>${wt}</b> 人日</span><span>未結缺失 <b>${od}</b></span><span>照片 <b>${ph}</b></span>`;
+}
+
+/* ---------- 表單 ---------- */
+function blankReport() {
+  const p = S.projects[0] || null;
+  return {
+    id: "", date: todayStr(), projectId: p ? p.id : "", projectName: p ? p.name : "",
+    weather: "晴", temp: "", reporter: S.me ? S.me.name : "", summary: "",
+    workers: [], machines: [], items: [], materials: [], inspections: [], defects: [], photos: [],
+    createdAt: "", updatedAt: "", createdBy: "", updatedBy: "",
+  };
+}
+
+function newReport() {
+  if (S.dirty && !confirm("目前日報尚未儲存，確定要新增嗎？")) return;
+  S.cur = blankReport();
+  S.dirty = false;
+  renderForm();
+  renderList();
+  $("#fDate").focus();
+}
+
+function findReport(id) { return S.reports.find(r => r.id === id) || null; }
+
+function selectReport(id, silent = false) {
+  const r = findReport(id);
+  if (!r) return;
+  if (!silent && S.dirty && !confirm("目前日報尚未儲存，確定切換？")) return;
+  S.cur = deep(r);
+  S.dirty = false;
+  renderForm();
+  renderList();
+}
+
+function renderForm() {
+  const r = S.cur;
+  if (!r) return;
+  $("#empty").classList.add("hidden");
+  $("#form").classList.remove("hidden");
+
+  $("#fProject").innerHTML = S.projects.length
+    ? S.projects.map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join("")
+    : `<option value="">（尚無專案）</option>`;
+  $("#fWeather").innerHTML = S.weatherOptions.map(w => `<option value="${esc(w)}">${esc(w)}</option>`).join("");
+  $("#fDate").value = r.date || todayStr();
+  $("#fProject").value = r.projectId || (S.projects[0] ? S.projects[0].id : "");
+  $("#fWeather").value = r.weather || S.weatherOptions[0];
+  $("#fTemp").value = r.temp || "";
+  $("#fReporter").value = r.reporter || (S.me ? S.me.name : "");
+  $("#fSummary").value = r.summary || "";
+  $("#metaInfo").textContent = r.createdAt
+    ? `建立 ${r.createdAt}${r.updatedAt && r.updatedAt !== r.createdAt ? " ・更新 " + r.updatedAt : ""}${r.updatedBy ? " ・" + r.updatedBy : ""}`
+    : "尚未儲存";
+
+  ["workers", "machines", "items", "materials", "inspections", "defects"].forEach(renderTable);
+  renderPhotos();
+  updateWorkerSum();
+  updateDefectHint();
+  updateDirtyHint();
+  $("#btnDelete").disabled = !r.id;
+  $("#btnSave").disabled = !S.canWrite;
+  $("#btnSave2").disabled = !S.canWrite;
+  $("#btnNew").disabled = false;
+}
+
+function renderTable(section) {
+  const cols = SCHEMAS[section];
+  const rows = S.cur[section] || [];
+  const head = `<tr>${cols.map(c => `<th class="${c.w === "num" ? "th-num" : ""}">${esc(c.label)}</th>`).join("")}<th style="width:30px;"></th></tr>`;
+  const body = rows.map((row, i) => `<tr>${cols.map(c => `<td class="${c.w === "num" ? "td-num" : ""}">${cellHtml(section, c, row, i)}</td>`).join("")}<td><button class="x" type="button" data-del="${section}" data-i="${i}" title="刪除這列">✕</button></td></tr>`).join("");
+  const empty = rows.length ? "" : `<tr><td colspan="${cols.length + 1}" class="small" style="padding:8px;">尚無資料，按「＋ 一列」新增</td></tr>`;
+  $("#tbl" + section[0].toUpperCase() + section.slice(1)).innerHTML = head + body + empty;
+}
+
+function optionsFor(which) {
+  const list = which === "inspect" ? S.inspectOptions : S.defectOptions;
+  return list.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join("");
+}
+
+function cellHtml(section, c, row, i) {
+  const val = row[c.k] || "";
+  const attrs = `data-section="${section}" data-i="${i}" data-k="${c.k}"`;
+  if (c.select) {
+    const list = c.select === "inspect" ? S.inspectOptions : S.defectOptions;
+    const sel = list.map(v => `<option value="${esc(v)}" ${v === val ? "selected" : ""}>${esc(v)}</option>`).join("");
+    return `<select ${attrs}>${sel}</select>`;
+  }
+  if (c.date) {
+    return `<input type="date" ${attrs} value="${esc(val)}">`;
+  }
+  const numeric = c.w === "num";
+  return `<input type="text" ${attrs} value="${esc(val)}" placeholder="${esc(c.ph || "")}" ${numeric ? 'inputmode="decimal"' : ""}>`;
+}
+
+function updateWorkerSum() {
+  const n = workersTotal(S.cur);
+  $("#fWorkerSum").value = n ? `${n} 人` : "0 人";
+}
+
+function updateDefectHint() {
+  const od = openDefects(S.cur);
+  $("#defectHint").textContent = od ? `未結 ${od} 件，建議設改善期限` : "全部已結案";
+}
+
+function updateDirtyHint() {
+  $("#dirtyHint").textContent = S.dirty ? "● 有未儲存的變更" : "";
+  $("#dirtyHint").style.color = "var(--warn)";
+}
+
+function markDirty() {
+  S.dirty = true;
+  updateDirtyHint();
+}
+
+/* ---------- 照片 ---------- */
+function photoUrl(p) {
+  const q = new URLSearchParams({ root: p.root || "", path: p.path || "" });
+  if (S.vtoken) q.set("vtoken", S.vtoken);
+  return `/api/fs/file?${q.toString()}`;
+}
+
+function renderPhotos() {
+  const list = (S.cur.photos || []);
+  $("#photoGrid").innerHTML = list.map((p, i) => `
+    <div class="ph">
+      <img src="${esc(photoUrl(p))}" alt="${esc(p.caption || p.path)}" loading="lazy">
+      <button class="del" type="button" data-photo-del="${i}" title="移除">✕</button>
+      <input class="cap" data-photo-cap="${i}" value="${esc(p.caption || "")}" placeholder="照片說明">
+    </div>`).join("") + `<button class="ph-add" type="button" id="btnAddPhoto">📷 從共用資料夾挑照片</button>`;
+}
+
+async function openPicker() {
+  if (!S.roots.length) { toast("沒有可用的共用資料夾，請先在排程頁設定"); return; }
+  S.picker.root = S.roots[0].id;
+  $("#pickRoot").innerHTML = S.roots.map(r => `<option value="${esc(r.id)}">${esc(r.label)}</option>`).join("");
+  $("#pickRoot").value = S.picker.root;
+  $("#photoModal").classList.remove("hidden");
+  await browse("");
+}
+
+async function browse(path) {
+  S.picker.path = path || "";
+  $("#crumb").innerHTML = `<b>${esc(S.roots.find(r => r.id === S.picker.root)?.label || "")}</b>${path ? " / " + path.split("/").map(esc).join(" / ") : ""}`;
+  $("#pickerGrid").innerHTML = `<div class="small">讀取中…</div>`;
+  let j;
+  try {
+    j = await api(`/api/fs/list?root=${encodeURIComponent(S.picker.root)}&path=${encodeURIComponent(path || "")}`);
+  } catch (e) {
+    if (e.message !== "locked") $("#pickerGrid").innerHTML = `<div class="small" style="color:var(--bad)">${esc(e.message)}</div>`;
+    return;
+  }
+  const items = j.items || [];
+  const dirs = items.filter(it => it.isDir);
+  const imgs = items.filter(it => !it.isDir && [".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp"].includes((it.ext || "").toLowerCase()));
+  const others = items.filter(it => !it.isDir && !imgs.includes(it));
+  const html = [];
+  if (path) html.push(`<button class="pick dir" type="button" data-pick-dir=".."><span>↰</span><span>上一層</span></button>`);
+  dirs.forEach(d => html.push(`<button class="pick dir" type="button" data-pick-dir="${esc(d.rel)}"><span>📁</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(d.name)}</span></button>`));
+  imgs.forEach(f => html.push(`<button class="pick" type="button" data-pick-file="${esc(f.rel)}" title="${esc(f.name)}">
+      <img src="/api/fs/file?root=${encodeURIComponent(S.picker.root)}&path=${encodeURIComponent(f.rel)}${S.vtoken ? "&vtoken=" + encodeURIComponent(S.vtoken) : ""}" loading="lazy" alt="">
+      <div class="nm">${esc(f.name)}</div>
+    </button>`));
+  $("#pickerGrid").innerHTML = html.join("") || `<div class="small">這個資料夾沒有照片</div>`;
+  if (others.length) $("#pickerGrid").innerHTML += `<div class="small" style="grid-column:1/-1;">另有 ${others.length} 個非圖片檔案未顯示</div>`;
+  $("#pickCount").textContent = `已選 ${(S.cur.photos || []).length} 張`;
+}
+
+function addPhoto(rel) {
+  if ((S.cur.photos || []).length >= 40) { toast("一份日報最多 40 張"); return; }
+  const name = rel.split("/").pop().replace(/\.[^.]+$/, "");
+  S.cur.photos.push({ root: S.picker.root, path: rel, caption: name });
+  markDirty();
+  renderPhotos();
+  $("#pickCount").textContent = `已選 ${S.cur.photos.length} 張`;
+  toast("已加入 1 張");
+}
+
+/* ---------- 儲存 ---------- */
+async function save() {
+  if (!S.cur || S.saving) return;
+  if (!S.canWrite) { toast("目前身分不能儲存"); return; }
+  const r = deep(S.cur);
+  if (!r.date) { toast("請先填日期"); return; }
+  if (!r.projectId) { toast("請先選專案"); return; }
+  S.saving = true;
+  $("#btnSave").disabled = $("#btnSave2").disabled = true;
+  try {
+    const j = await api("/api/reports/save", { method: "POST", body: JSON.stringify({ report: r }) });
+    S.reports = j.reports || S.reports;
+    const saved = findReport(j.report.id) || j.report;
+    S.cur = deep(saved);
+    S.dirty = false;
+    renderForm();
+    buildMonthOptions();
+    renderList();
+    renderSummary();
+    toast(j.action === "create" ? "已新增日報" : "已儲存");
+  } catch (e) {
+    if (e.message !== "locked") toast(e.message, 4000);
+  } finally {
+    S.saving = false;
+    $("#btnSave").disabled = $("#btnSave2").disabled = !S.canWrite;
+  }
+}
+
+async function removeReport() {
+  if (!S.cur || !S.cur.id) return;
+  if (!confirm(`確定刪除 ${S.cur.date} 的日報？此動作無法復原。`)) return;
+  try {
+    await api("/api/reports/delete", { method: "POST", body: JSON.stringify({ id: S.cur.id }) });
+    S.reports = S.reports.filter(r => r.id !== S.cur.id);
+    toast("已刪除");
+    S.dirty = false;
+    if (S.reports.length) selectReport(S.reports[0].id, true); else newReport();
+    renderList(); renderSummary(); buildMonthOptions();
+  } catch (e) {
+    if (e.message !== "locked") toast(e.message, 4000);
+  }
+}
+
+function copyPrevious() {
+  const others = S.reports.filter(r => r.id !== (S.cur.id || ""));
+  const same = others.find(r => r.projectId === S.cur.projectId) || others[0];
+  if (!same) { toast("還沒有其他日報可沿用"); return; }
+  const c = S.cur;
+  c.workers = deep(same.workers || []);
+  c.machines = deep(same.machines || []);
+  c.items = deep((same.items || []).map(it => Object.assign({}, it, { today: "", note: "" })));
+  c.materials = deep(same.materials || []);
+  ["workers", "machines", "items", "materials"].forEach(renderTable);
+  updateWorkerSum();
+  markDirty();
+  toast(`已沿用 ${same.date} 的人力/機具/工項`);
+}
+
+/* ---------- 列印 ---------- */
+function buildPrintHtml(r) {
+  const tbl = (title, cols, rows) => {
+    if (!rows || !rows.length) return "";
+    return `<h2>${esc(title)}</h2><table><thead><tr>${cols.map(c => `<th>${esc(c.label)}</th>`).join("")}</tr></thead><tbody>${
+      rows.map(row => `<tr>${cols.map(c => `<td>${esc(row[c.k] || "")}</td>`).join("")}</tr>`).join("")
+    }</tbody></table>`;
+  };
+  const photos = (r.photos || []).length
+    ? `<h2>現場照片</h2><div class="ph3">${r.photos.map(p => `<figure><img src="${esc(photoUrl(p))}" alt=""><figcaption>${esc(p.caption || p.path)}</figcaption></figure>`).join("")}</div>`
+    : "";
+  const od = openDefects(r);
+  return `
+    <h1>施工監理日報</h1>
+    <div class="meta">列印時間 ${esc(new Date().toLocaleString("zh-TW", { hour12: false }))}${od ? ` ・未結缺失 ${od} 件` : ""}</div>
+    <table>
+      <tr><th style="width:18%">日期</th><td style="width:32%">${esc(r.date)}（${esc(weekdayOf(r.date))}）</td><th style="width:18%">天候</th><td>${esc(r.weather || "")} ${esc(r.temp || "")}</td></tr>
+      <tr><th>專案</th><td colspan="3">${esc(r.projectName || "")}</td></tr>
+      <tr><th>出工合計</th><td>${workersTotal(r)} 人</td><th>填寫人</th><td>${esc(r.reporter || "")}</td></tr>
+    </table>
+    ${tbl("出工人力", SCHEMAS.workers, r.workers)}
+    ${tbl("使用機具", SCHEMAS.machines, r.machines)}
+    ${tbl("工項與數量", SCHEMAS.items, r.items)}
+    ${tbl("材料進場", SCHEMAS.materials, r.materials)}
+    ${tbl("查驗紀錄", SCHEMAS.inspections, r.inspections)}
+    ${tbl("缺失改善", SCHEMAS.defects, r.defects)}
+    ${r.summary ? `<h2>摘要與其他事項</h2><div style="white-space:pre-wrap;border:1px solid #555;padding:2mm;font-size:9.5pt;">${esc(r.summary)}</div>` : ""}
+    ${photos}
+    <div class="sign">
+      <div>填寫人：${esc(r.reporter || "")}</div>
+      <div>工地主任：</div>
+      <div>監造單位：</div>
+    </div>`;
+}
+
+async function printReport() {
+  if (!S.cur) { toast("沒有可列印的日報"); return; }
+  const area = $("#printArea");
+  area.innerHTML = buildPrintHtml(S.cur);
+  const imgs = Array.from(area.querySelectorAll("img"));
+  await Promise.all(imgs.map(img => img.complete ? Promise.resolve() : new Promise(res => {
+    img.onload = img.onerror = res;
+    setTimeout(res, 1500);
+  })));
+  window.print();
+}
+
+/* ---------- 解鎖 ---------- */
+function showLock() {
+  $("#lockOverlay").classList.remove("hidden");
+  setTimeout(() => $("#lockPass").focus(), 50);
+}
+async function doUnlock() {
+  const pw = $("#lockPass").value;
+  $("#lockErr").textContent = "";
+  try {
+    const res = await fetch("/api/unlock", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: pw }),
+    });
+    const j = await res.json();
+    if (!res.ok || !j.ok) { $("#lockErr").textContent = j.error || "密碼錯誤"; return; }
+    S.vtoken = j.viewToken;
+    sessionStorage.setItem("pm_lan_view_token", j.viewToken);
+    $("#lockOverlay").classList.add("hidden");
+    await load();
+  } catch (e) {
+    $("#lockErr").textContent = "連線失敗：" + e.message;
+  }
+}
+
+/* ---------- 事件 ---------- */
+function bind() {
+  $("#btnUnlock").addEventListener("click", doUnlock);
+  $("#lockPass").addEventListener("keydown", e => { if (e.key === "Enter") doUnlock(); });
+
+  $("#btnSave").addEventListener("click", save);
+  $("#btnSave2").addEventListener("click", save);
+  $("#btnPrint").addEventListener("click", printReport);
+  $("#btnNew").addEventListener("click", newReport);
+  $("#btnDelete").addEventListener("click", removeReport);
+  $("#btnCopyPrev").addEventListener("click", copyPrevious);
+
+  $("#q").addEventListener("input", renderList);
+  $("#fMonth").addEventListener("change", () => { renderList(); renderSummary(); });
+
+  $("#list").addEventListener("click", e => {
+    const b = e.target.closest(".rec");
+    if (b) selectReport(b.dataset.id);
+  });
+
+  $("#fDate").addEventListener("change", e => {
+    S.cur.date = e.target.value;
+    markDirty();
+    if (S.cur.id) renderList();
+  });
+  $("#fProject").addEventListener("change", e => {
+    const p = S.projects.find(x => x.id === e.target.value);
+    S.cur.projectId = e.target.value;
+    S.cur.projectName = p ? p.name : "";
+    markDirty();
+  });
+  $("#fWeather").addEventListener("change", e => { S.cur.weather = e.target.value; markDirty(); });
+  $("#fTemp").addEventListener("input", e => { S.cur.temp = e.target.value; markDirty(); });
+  $("#fSummary").addEventListener("input", e => { S.cur.summary = e.target.value; markDirty(); });
+
+  $("#form").addEventListener("input", e => {
+    const t = e.target;
+    if (t.dataset && t.dataset.k) {
+      S.cur[t.dataset.section][Number(t.dataset.i)][t.dataset.k] = t.value;
+      markDirty();
+      if (t.dataset.section === "workers") updateWorkerSum();
+      if (t.dataset.section === "defects") updateDefectHint();
+    }
+    if (t.dataset && t.dataset.photoCap !== undefined) {
+      S.cur.photos[Number(t.dataset.photoCap)].caption = t.value;
+      markDirty();
+    }
+  });
+
+  document.addEventListener("click", e => {
+    const add = e.target.closest("[data-add]");
+    if (add) {
+      const sec = add.dataset.add;
+      const row = {};
+      SCHEMAS[sec].forEach(c => { row[c.k] = c.select ? (c.select === "inspect" ? S.inspectOptions[0] : S.defectOptions[0]) : ""; });
+      S.cur[sec].push(row);
+      markDirty();
+      renderTable(sec);
+      if (sec === "workers") updateWorkerSum();
+      if (sec === "defects") updateDefectHint();
+      return;
+    }
+    const del = e.target.closest("[data-del]");
+    if (del) {
+      const sec = del.dataset.del;
+      S.cur[sec].splice(Number(del.dataset.i), 1);
+      markDirty();
+      renderTable(sec);
+      if (sec === "workers") updateWorkerSum();
+      if (sec === "defects") updateDefectHint();
+      return;
+    }
+    const pd = e.target.closest("[data-photo-del]");
+    if (pd) {
+      S.cur.photos.splice(Number(pd.dataset.photoDel), 1);
+      markDirty();
+      renderPhotos();
+      return;
+    }
+    if (e.target.closest("#btnAddPhoto")) { openPicker(); return; }
+
+    const dir = e.target.closest("[data-pick-dir]");
+    if (dir) {
+      const v = dir.dataset.pickDir;
+      if (v === "..") browse(S.picker.path.split("/").slice(0, -1).join("/"));
+      else browse(v);
+      return;
+    }
+    const f = e.target.closest("[data-pick-file]");
+    if (f) { addPhoto(f.dataset.pickFile); return; }
+  });
+
+  $("#btnPickDone").addEventListener("click", () => $("#photoModal").classList.add("hidden"));
+  $("#photoModal").addEventListener("click", e => { if (e.target.id === "photoModal") $("#photoModal").classList.add("hidden"); });
+  $("#pickRoot").addEventListener("change", e => { S.picker.root = e.target.value; browse(""); });
+  $("#btnPickUp").addEventListener("click", () => browse(S.picker.path.split("/").slice(0, -1).join("/")));
+
+  document.addEventListener("keydown", e => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { e.preventDefault(); save(); }
+  });
+  window.addEventListener("beforeunload", e => {
+    if (S.dirty) { e.preventDefault(); e.returnValue = ""; }
+  });
+}
+
+(function () {
+  const p = location.pathname;
+  if (location.protocol === "file:" || /report\.html$/.test(p)) {
+    const n = document.getElementById("envNotice");
+    if (n) {
+      n.textContent = "這是本機版頁面（需要 pm_server-v11.py）。雲端版請開 report/，或啟動伺服器後開 /report。";
+      n.classList.remove("hidden");
+    }
+  }
+})();
+
+bind();
+load();
+</script>
+</body>
+</html>

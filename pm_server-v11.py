@@ -867,6 +867,151 @@ def save_data_unlocked(data, trigger_cloud=True):
         SYNC_WAKE_EVENT.set()
 
 
+# ---------- 施工監理日報（獨立模組：獨立資料檔，重用登入與共用資料夾） ----------
+REPORT_FILE = os.path.join(BASE_DIR, "report_data.json")
+REPORT_HTML = os.path.join(BASE_DIR, "report.html")
+
+REPORT_WEATHER = ("晴", "多雲", "陰", "雨", "豪雨", "颱風")
+REPORT_INSPECT_RESULTS = ("合格", "不合格", "待驗", "不適用")
+REPORT_DEFECT_STATES = ("待改善", "已改善", "複驗合格", "已結案")
+
+
+def default_reports_data():
+    return {"schemaVersion": 1, "version": 1, "reports": []}
+
+
+def load_reports_unlocked():
+    if not os.path.exists(REPORT_FILE):
+        return default_reports_data()
+    try:
+        with open(REPORT_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception:
+        return default_reports_data()
+    if not isinstance(data, dict):
+        return default_reports_data()
+    if not isinstance(data.get("reports"), list):
+        data["reports"] = []
+    return data
+
+
+def save_reports_unlocked(data):
+    os.makedirs(BACKUP_DIR, exist_ok=True)
+    tmp_path = REPORT_FILE + ".tmp"
+    with open(tmp_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    os.replace(tmp_path, REPORT_FILE)
+    today_str = datetime.date.today().isoformat()
+    backup_path = os.path.join(BACKUP_DIR, f"report_data_{today_str}.json")
+    if not os.path.exists(backup_path):
+        shutil.copy2(REPORT_FILE, backup_path)
+
+
+def _rep_text(value, limit=200):
+    return str(value or "").strip()[:limit]
+
+
+def _rep_rows(raw, cols, limit=80):
+    out = []
+    if not isinstance(raw, list):
+        return out
+    for row in raw[:limit]:
+        if not isinstance(row, dict):
+            continue
+        item = {c: _rep_text(row.get(c), 300) for c in cols}
+        if any(item.values()):
+            out.append(item)
+    return out
+
+
+def _rep_photos(raw, limit=40):
+    out = []
+    if not isinstance(raw, list):
+        return out
+    for row in raw[:limit]:
+        if not isinstance(row, dict):
+            continue
+        path = _rep_text(row.get("path"), 400)
+        if not path:
+            continue
+        out.append({
+            "root": _rep_text(row.get("root"), 60),
+            "path": path,
+            "caption": _rep_text(row.get("caption"), 120),
+        })
+    return out
+
+
+def normalize_report(raw, me_name=""):
+    if not isinstance(raw, dict):
+        raise ValueError("報告格式錯誤")
+    date_str = _rep_text(raw.get("date"), 10)
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date_str):
+        raise ValueError("日期需為 YYYY-MM-DD 格式")
+    try:
+        datetime.date.fromisoformat(date_str)
+    except ValueError:
+        raise ValueError("日期不是有效日期")
+
+    rid = _rep_text(raw.get("id"), 40)
+    if not re.fullmatch(r"[A-Za-z0-9_\-]{4,40}", rid):
+        rid = "rep_" + uuid.uuid4().hex[:10]
+
+    weather = _rep_text(raw.get("weather"), 10)
+    if weather not in REPORT_WEATHER:
+        weather = REPORT_WEATHER[0]
+
+    workers = _rep_rows(raw.get("workers"), ("trade", "count"), 40)
+    for w in workers:
+        w["count"] = w["count"][:10]
+    inspections = _rep_rows(raw.get("inspections"), ("name", "result", "note"), 60)
+    for it in inspections:
+        if it["result"] not in REPORT_INSPECT_RESULTS:
+            it["result"] = REPORT_INSPECT_RESULTS[0]
+    defects = _rep_rows(raw.get("defects"), ("desc", "dueDate", "status", "note"), 60)
+    for d in defects:
+        if d["status"] not in REPORT_DEFECT_STATES:
+            d["status"] = REPORT_DEFECT_STATES[0]
+        due = d["dueDate"]
+        if due and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", due):
+            d["dueDate"] = ""
+
+    now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    return {
+        "id": rid,
+        "date": date_str,
+        "projectId": _rep_text(raw.get("projectId"), 60),
+        "projectName": _rep_text(raw.get("projectName"), 120),
+        "weather": weather,
+        "temp": _rep_text(raw.get("temp"), 20),
+        "reporter": _rep_text(raw.get("reporter"), 60) or me_name,
+        "summary": _rep_text(raw.get("summary"), 2000),
+        "workers": workers,
+        "machines": _rep_rows(raw.get("machines"), ("name", "count"), 40),
+        "items": _rep_rows(raw.get("items"), ("name", "unit", "today", "total", "note"), 60),
+        "materials": _rep_rows(raw.get("materials"), ("name", "qty", "note"), 40),
+        "inspections": inspections,
+        "defects": defects,
+        "photos": _rep_photos(raw.get("photos"), 40),
+        "createdAt": _rep_text(raw.get("createdAt"), 30) or now_str,
+        "updatedAt": now_str,
+        "createdBy": _rep_text(raw.get("createdBy"), 60) or me_name,
+        "updatedBy": me_name,
+    }
+
+
+def report_can_write(me):
+    return bool(me and me.get("role") in ("sysadmin", "pm", "member"))
+
+
+def report_can_delete(me, report):
+    if not me:
+        return False
+    if me.get("role") in ("sysadmin", "pm"):
+        return True
+    return report.get("createdBy") == me.get("name")
+
+
 # ---------- GitHub 私有倉庫自動雙向同步引擎 (純標準庫，零外部套件) ----------
 def default_github_config():
     return {
@@ -1363,6 +1508,22 @@ class PMHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(raw)
 
+    def send_report_page(self):
+        if not os.path.isfile(REPORT_HTML):
+            self.send_json(404, {
+                "ok": False,
+                "error": "找不到 report.html，請將它與 pm_server 放在同一個資料夾",
+            })
+            return
+        with open(REPORT_HTML, "rb") as f:
+            raw = f.read()
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(raw)))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(raw)
+
     def read_json_body(self):
         length = int(self.headers.get("Content-Length", "0"))
         if length <= 0:
@@ -1416,12 +1577,42 @@ class PMHandler(BaseHTTPRequestHandler):
             self.wfile.write(raw)
             return
 
+        if parsed.path in ("/report", "/report.html"):
+            self.send_report_page()
+            return
+
         qs = parse_qs(parsed.query)
         with DATA_LOCK:
             _gate_data = load_data_unlocked()
             _unlocked = self.is_view_unlocked(_gate_data, qs)
         if not _unlocked:
             self.send_view_locked()
+            return
+
+        if parsed.path == "/api/reports":
+            with DATA_LOCK:
+                data = load_data_unlocked()
+                me = self.resolve_me_unlocked(data)
+                rep = load_reports_unlocked()
+                reports = sorted(
+                    rep.get("reports", []),
+                    key=lambda r: (r.get("date", ""), r.get("updatedAt", "")),
+                    reverse=True,
+                )
+                payload = {
+                    "ok": True,
+                    "version": rep.get("version", 1),
+                    "reports": reports,
+                    "projects": [{"id": p.get("id"), "name": p.get("name")} for p in data.get("projects", [])],
+                    "members": [public_member(m) for m in data.get("members", [])],
+                    "sharedRoots": public_shared_roots(data),
+                    "me": public_member(me) if me else None,
+                    "canWrite": report_can_write(me),
+                    "weatherOptions": list(REPORT_WEATHER),
+                    "inspectOptions": list(REPORT_INSPECT_RESULTS),
+                    "defectOptions": list(REPORT_DEFECT_STATES),
+                }
+            self.send_json(200, payload)
             return
 
         if parsed.path == "/api/state":
@@ -1666,6 +1857,69 @@ class PMHandler(BaseHTTPRequestHandler):
                 payload = public_state(data, None)
             self.send_json(200, {"ok": True, "data": payload})
             return
+
+        if parsed.path in ("/api/reports/save", "/api/reports/delete"):
+            with DATA_LOCK:
+                data = load_data_unlocked()
+                me = self.resolve_me_unlocked(data)
+                if not me:
+                    self.send_json(401, {"ok": False, "error": "請先登入您的身分（右上角）才能填寫監理日報"})
+                    return
+                if not report_can_write(me):
+                    self.send_json(403, {"ok": False, "error": "您目前為「唯讀檢視」身分，無法新增或修改日報"})
+                    return
+                rep = load_reports_unlocked()
+                reports = rep["reports"]
+
+                if parsed.path.endswith("/delete"):
+                    rid = str(body.get("id") or "").strip()
+                    idx = next((i for i, r in enumerate(reports) if r.get("id") == rid), None)
+                    if idx is None:
+                        self.send_json(404, {"ok": False, "error": "找不到該日報（可能已被刪除）"})
+                        return
+                    if not report_can_delete(me, reports[idx]):
+                        self.send_json(403, {"ok": False, "error": "只有建立者或專案管理員可以刪除此日報"})
+                        return
+                    reports.pop(idx)
+                    rep["version"] = int(rep.get("version", 1)) + 1
+                    save_reports_unlocked(rep)
+                    self.send_json(200, {"ok": True, "deleted": rid, "version": rep["version"]})
+                    return
+
+                try:
+                    clean = normalize_report(body.get("report") or {}, me.get("name", ""))
+                except ValueError as e:
+                    self.send_json(400, {"ok": False, "error": str(e)})
+                    return
+                idx = next((i for i, r in enumerate(reports) if r.get("id") == clean["id"]), None)
+                if idx is not None:
+                    old = reports[idx]
+                    if old.get("createdBy") != me.get("name") and me.get("role") not in ("sysadmin", "pm"):
+                        self.send_json(403, {"ok": False, "error": "這份日報由其他人建立，只有建立者或專案管理員可以修改"})
+                        return
+                    clean["createdAt"] = old.get("createdAt") or clean["createdAt"]
+                    clean["createdBy"] = old.get("createdBy") or clean["createdBy"]
+                    reports[idx] = clean
+                    action = "update"
+                else:
+                    reports.append(clean)
+                    action = "create"
+
+                rep["version"] = int(rep.get("version", 1)) + 1
+                save_reports_unlocked(rep)
+                reports_sorted = sorted(
+                    reports,
+                    key=lambda r: (r.get("date", ""), r.get("updatedAt", "")),
+                    reverse=True,
+                )
+                self.send_json(200, {
+                    "ok": True,
+                    "action": action,
+                    "report": clean,
+                    "version": rep["version"],
+                    "reports": reports_sorted,
+                })
+                return
 
         project_id = str(body.get("projectId") or "")
 
@@ -3217,6 +3471,7 @@ html[data-theme="dark"] .link-icon-btn[style] {
     <button id="btnHolidays" title="管理休假日（如農曆過年）與截斷任務設定">📅 休假日</button>
     <button id="btnOpenSharedFiles" title="直接在網頁瀏覽內網共用資料夾">📂 共用檔案</button>
     <button id="btnExportCSV">匯出 CSV</button>
+    <button id="btnReportModule" title="施工監理日報（獨立模組，資料存 report_data.json）" onclick="location.href='/report'">📋 監理日報</button>
     <button id="themeToggleBtn" class="theme-toggle-btn" title="目前為淺色主題，點擊切換深色">🌙 主題</button>
     <button id="btnSettings">設定</button>
     <button id="btnLockScreen" title="立即鎖定畫面（離開座位防窺探）" style="display:none;">🔒 鎖定</button>
